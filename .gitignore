@@ -1,0 +1,33 @@
+# Composer
+/vendor/
+/opt/php-jvm/std/vendor/
+composer.lock
+/opt/php-jvm/std/composer.lock
+
+# PHP-CS-Fixer cache
+.php-cs-fixer.cache
+
+# PHPStan cache
+/tmp/
+
+# Docker
+.docker/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+/var/log/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

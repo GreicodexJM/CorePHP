@@ -1,0 +1,23 @@
+version: "3.9"
+
+# =============================================================================
+# CorePHP (PHP-JVM) — Docker Compose Override
+# Development overrides (automatically merged by docker compose)
+# =============================================================================
+
+services:
+  app:
+    # Build the image locally instead of pulling
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Writable mount in development
+    volumes:
+      - ./:/app:rw
+    environment:
+      - APP_ENV=development
+      - LOG_LEVEL=debug
+    # Expose Xdebug port for IDE integration
+    ports:
+      - "8080:8080"
+      - "9003:9003"

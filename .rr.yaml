@@ -1,0 +1,77 @@
+# =============================================================================
+# CorePHP (PHP-JVM) — RoadRunner Configuration
+# Persistent HTTP application server replacing PHP-FPM
+# =============================================================================
+
+version: "3"
+
+# ---------------------------------------------------------------------------
+# RPC — internal management interface
+# ---------------------------------------------------------------------------
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+# ---------------------------------------------------------------------------
+# Server — PHP worker process definition
+# ---------------------------------------------------------------------------
+server:
+  command: "php /app/worker.php"
+  user:    ""
+  group:   ""
+  env:
+    APP_ENV: "${APP_ENV:-production}"
+    LOG_LEVEL: "${LOG_LEVEL:-warning}"
+  relay: pipes
+
+# ---------------------------------------------------------------------------
+# HTTP — main listener
+# ---------------------------------------------------------------------------
+http:
+  address:      "0.0.0.0:8080"
+  max_request_size: 8
+  middleware:
+    - gzip
+  uploads:
+    forbid:
+      - .php
+      - .exe
+      - .bat
+      - .sh
+  trusted_subnets:
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+  pool:
+    # Number of worker processes (scale to CPU cores)
+    num_workers:  4
+    # Restart workers after N requests to prevent memory leaks
+    max_jobs:     500
+    # Allocate timeout (seconds) for new worker
+    allocate_timeout: 60s
+    # Destroy timeout for graceful shutdown
+    destroy_timeout: 60s
+    # Supervisor — restart crashed workers automatically
+    supervisor:
+      watch_tick:         1s
+      ttl:                0s
+      idle_ttl:           10s
+      exec_ttl:           30s
+      max_worker_memory:  128
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+logs:
+  mode:     production
+  level:    "${LOG_LEVEL:-warn}"
+  channels:
+    http:
+      level: warn
+    server:
+      level: warn
+
+# ---------------------------------------------------------------------------
+# Metrics (optional — Prometheus)
+# ---------------------------------------------------------------------------
+# metrics:
+#   address: "0.0.0.0:2112"
