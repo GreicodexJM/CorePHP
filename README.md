@@ -1,8 +1,33 @@
-# CorePHP — PHP-JVM Base Docker Image
+# CorePHP — Base Docker Image
+
+[![Build & Push](https://github.com/GreicodexJM/CorePHP/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/GreicodexJM/CorePHP/actions/workflows/docker-publish.yml)
+[![Docker Hub](https://img.shields.io/docker/v/greicodex/corephp-vm?logo=docker&label=greicodex%2Fcorephp-vm)](https://hub.docker.com/r/greicodex/corephp-vm)
+[![PHP 8.3](https://img.shields.io/badge/PHP-8.3-blue?logo=php)](https://www.php.net/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 > **A production-grade, persistent PHP 8.3 runtime that brings JVM-like stability to PHP.**
 
 PHP traditionally re-initializes on every request. CorePHP eliminates this by running PHP inside **RoadRunner** as a long-lived process — just like the JVM. It also replaces PHP's silent-failure standard library with one that throws typed exceptions on every error.
+
+## 🐳 Pull from Docker Hub
+
+```bash
+# Latest stable release
+docker pull greicodex/corephp-vm:latest
+
+# Specific version
+docker pull greicodex/corephp-vm:1.0.0
+
+# Latest development build (main branch)
+docker pull greicodex/corephp-vm:edge
+```
+
+Use as your base image:
+
+```dockerfile
+FROM greicodex/corephp-vm:latest
+COPY . /app
+```
 
 ---
 

@@ -57,6 +57,42 @@
   - `functions.md` — global shims reference table
   - `migration.md` — step-by-step PHP array → std migration guide
 
+## What Was Added (2026-03-06 — CI/CD Pipeline)
+
+- ✅ **GitHub Actions workflow** — `.github/workflows/docker-publish.yml`
+  - Triggers: push to `main` (→ `edge` tag) and `v*.*.*` git tags (→ semver + `latest`)
+  - PRs: build-only validation (no push)
+  - Platform: `linux/arm64`
+  - Registry: `greicodex/corephp-vm` on Docker Hub
+  - Tags generated: `1.2.3`, `1.2`, `1`, `latest`, `sha-<hash>`, `edge`
+  - Caching: GitHub Actions layer cache (free)
+- ✅ **Makefile release targets**
+  - `make tag VERSION=1.0.0` — creates annotated git tag and pushes to origin
+  - `make release VERSION=1.0.0` — alias for `make tag`
+- ✅ **README.md** — Docker Hub badges + pull instructions added to header
+
+## Release Process
+
+To publish a new version to Docker Hub:
+```bash
+# 1. Ensure main branch is clean and tests pass
+make test
+
+# 2. Create and push a semver tag (triggers GitHub Actions)
+make tag VERSION=1.0.0
+
+# Docker Hub will receive:
+#   greicodex/corephp-vm:1.0.0
+#   greicodex/corephp-vm:1.0
+#   greicodex/corephp-vm:1
+#   greicodex/corephp-vm:latest
+#   greicodex/corephp-vm:sha-<hash>
+```
+
+Required GitHub Secrets:
+- `DOCKERHUB_USERNAME` = `greicodex`
+- `DOCKERHUB_TOKEN` = Docker Hub access token (Account Settings → Security)
+
 ## What's Left to Build
 - [ ] Fix RoadRunner worker.php crash (`WorkerAllocate: EOF` in Docker compose — likely missing roadrunner-worker package in vendor)
 

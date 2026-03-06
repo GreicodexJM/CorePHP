@@ -65,6 +65,22 @@ rr-start: ## Start the RoadRunner worker (foreground)
 	$(COMPOSE) exec app rr serve -c /app/.rr.yaml
 
 # ---------------------------------------------------------------------------
+# Release — semantic versioning via git tags
+# ---------------------------------------------------------------------------
+
+tag: ## Create and push a semver git tag  →  make tag VERSION=1.0.0
+ifndef VERSION
+	$(error VERSION is required. Usage: make tag VERSION=1.2.3)
+endif
+	@echo "→ Tagging v$(VERSION)..."
+	git tag -a v$(VERSION) -m "Release v$(VERSION)"
+	git push origin v$(VERSION)
+	@echo "✓ Pushed v$(VERSION) — GitHub Actions will build & push to Docker Hub"
+
+release: ## Alias for: make tag VERSION=x.y.z
+	$(MAKE) tag VERSION=$(VERSION)
+
+# ---------------------------------------------------------------------------
 # Maintenance
 # ---------------------------------------------------------------------------
 
