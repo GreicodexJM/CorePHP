@@ -1,3 +1,10 @@
+---
+layout: default
+title: Vec (ArrayList)
+parent: Standard Library
+nav_order: 1
+---
+
 # Vec (ArrayList) — Typed Sequential List
 
 `Vec` (`ArrayList`) is a type-safe replacement for plain PHP arrays. Every element must match the declared type; violations throw immediately.

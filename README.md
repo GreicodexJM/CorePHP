@@ -1,6 +1,11 @@
+<p align="center">
+  <img src="docs/corephp-logo.png" alt="CorePHP Logo" width="220" />
+</p>
+
 # CorePHP — Base Docker Image
 
 [![Build & Push](https://github.com/GreicodexJM/CorePHP/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/GreicodexJM/CorePHP/actions/workflows/docker-publish.yml)
+[![Docs](https://github.com/GreicodexJM/CorePHP/actions/workflows/pages.yml/badge.svg)](https://greicodexjm.github.io/CorePHP/)
 [![Docker Hub](https://img.shields.io/docker/v/greicodex/corephp-vm?logo=docker&label=greicodex%2Fcorephp-vm)](https://hub.docker.com/r/greicodex/corephp-vm)
 [![PHP 8.3](https://img.shields.io/badge/PHP-8.3-blue?logo=php)](https://www.php.net/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)

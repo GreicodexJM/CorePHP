@@ -1,3 +1,10 @@
+---
+layout: default
+title: Global Functions
+parent: Standard Library
+nav_order: 6
+---
+
 # Global Functions Reference
 
 Registered via `bootstrap.php` → available in every file without `use` statements.

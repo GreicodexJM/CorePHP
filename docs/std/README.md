@@ -1,3 +1,11 @@
+---
+layout: default
+title: Standard Library
+nav_order: 2
+has_children: true
+permalink: /std/
+---
+
 # std — CorePHP Standard Library
 
 The `core` namespace is the foundation of CorePHP. It provides a minimal, JVM-inspired type system that makes PHP behave like a statically-typed language at runtime.

@@ -1,3 +1,10 @@
+---
+layout: default
+title: Dict
+parent: Standard Library
+nav_order: 2
+---
+
 # Dict — Typed Key-Value Dictionary
 
 `Dict` is a type-safe replacement for PHP associative arrays. All values must be the declared type; keys are always strings.

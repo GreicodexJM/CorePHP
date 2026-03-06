@@ -1,3 +1,10 @@
+---
+layout: default
+title: IO
+parent: Standard Library
+nav_order: 4
+---
+
 # IO — Safe File & HTTP Facade
 
 `IO` is a zero-configuration facade that provides safe, exception-throwing wrappers for file system and HTTP operations. All failures throw typed exceptions.

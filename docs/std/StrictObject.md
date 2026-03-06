@@ -1,3 +1,10 @@
+---
+layout: default
+title: StrictObject & Any
+parent: Standard Library
+nav_order: 5
+---
+
 # StrictObject & Any — Undefined Property Guards
 
 ## StrictObject (abstract)

@@ -1,3 +1,10 @@
+---
+layout: default
+title: Migration Guide
+parent: Standard Library
+nav_order: 7
+---
+
 # Migration Guide — Plain PHP Arrays → std Collections
 
 This guide shows how to incrementally replace plain PHP arrays with `Vec` and `Dict` without rewriting everything at once.

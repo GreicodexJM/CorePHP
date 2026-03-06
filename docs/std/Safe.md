@@ -1,3 +1,10 @@
+---
+layout: default
+title: Safe
+parent: Standard Library
+nav_order: 3
+---
+
 # Safe — Safe Wrappers for PHP Builtins
 
 All methods are static. Every failure path throws a typed exception — never returns `false` or `null`.
