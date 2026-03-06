@@ -19,7 +19,7 @@ Provide a **portable, hardened base Docker image** that any future PHP project c
 - Shared Hosting deployments (Simulated JVM mode via `.user.ini`)
 
 ## Success Criteria
-1. `docker build -t php-jvm .` completes successfully
+1. `docker build -t corephp-vm .` completes successfully
 2. RoadRunner handles PSR-7 HTTP requests without process death
 3. Calling `json_decode('{invalid}')` throws `JsonDecodeException` (not returns `null`)
 4. Calling `file_get_contents('/nonexistent')` throws `FileReadException` (not returns `false`)

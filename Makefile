@@ -1,11 +1,11 @@
 # =============================================================================
-# CorePHP (PHP-JVM) — Makefile
+# CorePHP — Makefile
 # Primary interface for all development tasks
 # =============================================================================
 
-IMAGE_NAME  := php-jvm
+IMAGE_NAME  := corephp-vm
 IMAGE_TAG   := latest
-CONTAINER   := php-jvm-app
+CONTAINER   := corephp-vm-app
 COMPOSE     := docker compose
 
 .PHONY: help build up down restart shell test lint lint-fix rr-start logs clean
@@ -13,7 +13,7 @@ COMPOSE     := docker compose
 # Default target
 help: ## Show available targets
 	@echo ""
-	@echo "  CorePHP (PHP-JVM) — Available Makefile Targets"
+	@echo "  CorePHP — Available Makefile Targets"
 	@echo "  ================================================"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| sort \
@@ -24,7 +24,7 @@ help: ## Show available targets
 # Docker lifecycle
 # ---------------------------------------------------------------------------
 
-build: ## Build the php-jvm Docker image
+build: ## Build the corephp-vm Docker image
 	@echo "→ Building $(IMAGE_NAME):$(IMAGE_TAG)..."
 	docker build --no-cache -t $(IMAGE_NAME):$(IMAGE_TAG) .
 

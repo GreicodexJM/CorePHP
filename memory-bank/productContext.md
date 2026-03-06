@@ -28,7 +28,7 @@ $data = json_decode($body); // returns null if invalid, no exception
 $user = $data->user;        // NULL dereference, no error
 
 // After (CorePHP - loud failure):
-$data = \std\Security\Safe\Safe::jsonDecode($body); // throws JsonDecodeException immediately
+$data = \core\Security\Safe\Safe::jsonDecode($body); // throws JsonDecodeException immediately
 ```
 
 ```php
@@ -38,7 +38,7 @@ $users[] = new User();
 $users[] = "oops"; // No error, type corruption
 
 // After (TypedCollection):
-$users = new \std\Internal\Array\TypedCollection(User::class);
+$users = new \core\Internal\Array\TypedCollection(User::class);
 $users->add(new User()); // OK
 $users->add("oops");     // throws InvalidArgumentException immediately
 ```
@@ -46,5 +46,5 @@ $users->add("oops");     // throws InvalidArgumentException immediately
 ## User Experience Goals
 - **Zero configuration** — base image works out of the box
 - **Fail loudly** — every problem is immediately visible as a named exception
-- **Composable** — use as `FROM php-jvm:latest` in any project
+- **Composable** — use as `FROM corephp-vm:latest` in any project
 - **Transparent** — all overrides are documented and auditable

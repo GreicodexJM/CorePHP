@@ -1,6 +1,6 @@
 {
-    "name": "corephp/php-jvm",
-    "description": "CorePHP PHP-JVM: Production-grade persistent PHP runtime base image",
+    "name": "corephp/corephp-vm",
+    "description": "CorePHP: Production-grade persistent PHP runtime base image",
     "type": "project",
     "license": "MIT",
     "require": {
@@ -29,7 +29,7 @@
         "lint":     "php-cs-fixer fix --config=.php-cs-fixer.dist.php --dry-run --diff",
         "lint-fix": "php-cs-fixer fix --config=.php-cs-fixer.dist.php",
         "analyse":  "phpstan analyse --configuration=phpstan.neon",
-        "test":     "phpunit --configuration=opt/php-jvm/std/phpunit.xml"
+        "test":     "phpunit --configuration=opt/corephp-vm/std/phpunit.xml"
     },
     "config": {
         "optimize-autoloader": true,

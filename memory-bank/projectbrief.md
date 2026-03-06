@@ -8,7 +8,7 @@ CorePHP is a hardened PHP 8.3 base Docker image that gives PHP the persistence, 
 2. **Zero Silent Failures** — Every PHP function that returns `false`/`null` on error is replaced with one that throws a typed exception
 3. **Engine-Level Safety** — Dangerous functions disabled in `php.ini` + runkit7 overrides
 4. **Type Safety** — `TypedCollection` replaces native mixed arrays; `StrictObject` prevents undefined property access
-5. **Portable** — Single `docker build -t php-jvm .` produces a reusable base image
+5. **Portable** — Single `docker build -t corephp-vm .` produces a reusable base image
 
 ## Key Technologies
 - PHP 8.3 CLI (Alpine)

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * CorePHP (PHP-JVM) — PHP-CS-Fixer Configuration
+ * CorePHP — PHP-CS-Fixer Configuration
  *
  * Enforces:
  *   - declare(strict_types=1) on every PHP file
@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 $finder = PhpCsFixer\Finder::create()
     ->in([
-        __DIR__ . '/opt/php-jvm/std/src',
-        __DIR__ . '/opt/php-jvm/std/tests',
+        __DIR__ . '/opt/corephp-vm/std/src',
+        __DIR__ . '/opt/corephp-vm/std/tests',
     ])
     ->name('*.php')
     ->exclude([

@@ -1,10 +1,10 @@
 # Active Context: CorePHP (PHP-JVM)
 
 ## Current Work Focus
-✅ **Initial implementation complete.**
+✅ **TDD session complete — 155 unit tests written and passing.**
 
 ## Status
-🟢 **COMPLETE** — All 29 project files generated from specification in `docs/PROJECT.md`.
+🟢 **COMPLETE** — All source files generated, all tests passing, full documentation written.
 
 ## What Was Built
 
@@ -23,24 +23,24 @@ All GOS-required documentation files created under `memory-bank/`.
 
 ### Phase 4 — Bootstrap Sandbox ✅
 - `worker.php` — PSR-7 persistent request loop with global Throwable catch
-- `opt/php-jvm/bootstrap.php` — `set_error_handler` + Monolog audit + `FunctionOverrider::install()` + `std\StrictObject`
+- `opt/corephp-vm/bootstrap.php` — `set_error_handler` + Monolog audit + `FunctionOverrider::install()` + `core\StrictObject`
 
 ### Phase 5 — Standard Library (std) ✅
 
-**Pillar 1 — `std\Internal\Array\TypedCollection`**
+**Pillar 1 — `core\Internal\Array\TypedCollection`**
 - Type-safe homogeneous collection (replaces native arrays)
 - Supports class/interface types AND primitives (int, string, float, bool)
 - Implements ArrayAccess + Iterator + Countable
 - `add()`, `filter()`, `map()`, `toArray()`
 
-**Pillar 2 — `std\Net\Http\HttpClient`**
+**Pillar 2 — `core\Net\Http\HttpClient`**
 - curl wrapper — ALL errors become `HttpException`
 - `get()`, `post()`, `put()`, `delete()`
 - `HttpResponse` immutable VO with `json()`, `header()`, `statusCode()`
 - `strictStatus` mode throws on 4xx/5xx
 - `HttpException::fromCurlError()` + `::fromHttpStatus()`
 
-**Pillar 3 — `std\Security\Safe`**
+**Pillar 3 — `core\Security\Safe`**
 - `Safe::jsonDecode()` → `JsonDecodeException`
 - `Safe::jsonEncode()` → `JsonEncodeException`
 - `Safe::toInt()` → `TypeCoercionException`
@@ -48,7 +48,7 @@ All GOS-required documentation files created under `memory-bank/`.
 - `Safe::fileRead()` → `FileReadException`
 - `Safe::fileWrite()` → `FileWriteException`
 
-**Engine — `std\Engine\FunctionOverrider`**
+**Engine — `core\Engine\FunctionOverrider`**
 - runkit7 idempotent installer
 - Overrides: json_decode, json_encode, file_get_contents, file_put_contents, intval, floatval, preg_match, preg_match_all, preg_replace, curl_exec, base64_decode
 - Unserialize guard (no-op if already in disable_functions)
@@ -60,17 +60,38 @@ All GOS-required documentation files created under `memory-bank/`.
 ### Phase 7 — CI ✅
 - `ci/lint.sh` — PHP-CS-Fixer dry-run + PHPStan
 - `ci/test.sh` — PHPUnit
-- `opt/php-jvm/std/phpunit.xml` — test suite config
+- `opt/corephp-vm/std/phpunit.xml` — test suite config
 
 ### Phase 8 — Documentation ✅
 - `README.md` — full documentation with VPS + Shared Hosting instructions
 - Memory Bank updated
 
+## What Was Added (TDD Session)
+
+### Tests ✅ — 155 tests, 0 failures
+- `TypedCollectionTest` (37 tests) — full API coverage
+- `VecTest` (12 tests) — subclass contract + covariant factories
+- `DictTest` (38 tests) — full API coverage including only/except
+- `SafeTest` (26 tests) — all Safe static methods + all exception types
+- `IOTest` (14 tests) — file + JSON + HTTP factory methods
+- `StrictObjectTest` (9 tests) — all magic method guards
+- `AnyTest` (7 tests) — inheritance + __toString
+- `HttpClientTest` (28 tests) — constructor validation, HttpResponse VO, integration (tagged)
+
+### API Fixes Applied During TDD
+- `TypedCollection` → removed `final` keyword (required by `Vec` inheritance)
+- `HttpClient` → constructor validates `timeout > 0`
+- `HttpResponse::header()` → returns `?string` (was throwing on missing)
+- `HttpResponse::requireHeader()` → new method, throws `HttpException` if absent
+- `HttpResponse::isOk()` → new method, checks `statusCode === 200`
+
+### Documentation ✅ — `docs/std/` (7 files)
+- `README.md`, `Vec.md`, `Dict.md`, `Safe.md`, `IO.md`, `StrictObject.md`, `functions.md`, `migration.md`
+
 ## Next Steps (Future Work)
-1. Write PHPUnit tests for the std library (TDD follow-up)
-2. Run `docker build -t php-jvm .` to verify build succeeds
-3. Add Prometheus metrics endpoint to `.rr.yaml`
-4. Consider adding `std\Database\Connection` wrapper (PDO → typed exceptions)
+1. Fix RoadRunner worker.php crash (`WorkerAllocate: EOF` — likely missing spiral/roadrunner-worker in vendor)
+2. Add Prometheus metrics endpoint to `.rr.yaml`
+3. Consider adding `core\Database\Connection` wrapper (PDO → typed exceptions)
 
 ## Key Technical Decisions (Final)
 - runkit7 for native function override at boot-time (intercepted from ALL code including vendor)

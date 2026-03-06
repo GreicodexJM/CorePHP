@@ -1,8 +1,9 @@
 # Composer
 /vendor/
-/opt/php-jvm/std/vendor/
+/opt/corephp-vm/std/vendor/
 composer.lock
-/opt/php-jvm/std/composer.lock
+/opt/corephp-vm/std/composer.lock
+/opt/corephp-vm/std/.phpunit.result.cache
 
 # PHP-CS-Fixer cache
 .php-cs-fixer.cache

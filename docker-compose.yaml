@@ -1,14 +1,14 @@
 version: "3.9"
 
 # =============================================================================
-# CorePHP (PHP-JVM) — Docker Compose
+# CorePHP — Docker Compose
 # Production / base configuration
 # =============================================================================
 
 services:
   app:
-    image: php-jvm:latest
-    container_name: php-jvm-app
+    image: corephp-vm:latest
+    container_name: corephp-vm-app
     restart: unless-stopped
     ports:
       - "8080:8080"

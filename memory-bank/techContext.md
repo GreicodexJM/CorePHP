@@ -27,7 +27,7 @@
 ```bash
 git clone <repo>
 cd CorePHP
-make build    # Build php-jvm Docker image
+make build    # Build corephp-vm Docker image
 make up       # Start services
 make shell    # Enter container
 make test     # Run tests
@@ -36,7 +36,7 @@ make lint     # Run lint checks
 
 ### Building the Image
 ```bash
-docker build -t php-jvm:latest .
+docker build -t corephp-vm:latest .
 # Or via Makefile:
 make build
 ```
@@ -66,8 +66,8 @@ make build
 |---|---|
 | PHP binary | `/usr/local/bin/php` |
 | RoadRunner binary | `/usr/local/bin/rr` |
-| bootstrap.php | `/opt/php-jvm/bootstrap.php` |
-| std library | `/opt/php-jvm/std/` |
+| bootstrap.php | `/opt/corephp-vm/bootstrap.php` |
+| std library | `/opt/corephp-vm/std/` |
 | php.ini | `/usr/local/etc/php/php.ini` |
 | RoadRunner config | `/.rr.yaml` (working dir) |
 | worker.php | `/app/worker.php` |

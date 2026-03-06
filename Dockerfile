@@ -1,16 +1,16 @@
 # =============================================================================
-# CorePHP (PHP-JVM) — Base Docker Image
+# CorePHP — Base Docker Image
 # PHP 8.3 CLI (Alpine) + RoadRunner + runkit7 + hardened php.ini
 # =============================================================================
 # Usage:
-#   docker build -t php-jvm:latest .
-#   FROM php-jvm:latest   ← in your project's Dockerfile
+#   docker build -t corephp-vm:latest .
+#   FROM corephp-vm:latest   ← in your project's Dockerfile
 # =============================================================================
 
 FROM php:8.3-cli-alpine AS base
 
 LABEL maintainer="CorePHP"
-LABEL description="PHP-JVM: Persistent, hardened PHP 8.3 runtime with RoadRunner"
+LABEL description="CorePHP: Persistent, hardened PHP 8.3 runtime with RoadRunner"
 LABEL version="1.0.0"
 
 # ---------------------------------------------------------------------------
@@ -79,8 +79,8 @@ COPY config/php.ini /usr/local/etc/php/php.ini
 # auto_prepend_file is disabled here because bootstrap.php depends on
 # Psr\Log which is not yet installed at this build stage.
 # ---------------------------------------------------------------------------
-COPY opt/php-jvm/ /opt/php-jvm/
-RUN cd /opt/php-jvm/std \
+COPY opt/corephp-vm/ /opt/corephp-vm/
+RUN cd /opt/corephp-vm/std \
     && php -d auto_prepend_file="" /usr/local/bin/composer install \
         --no-dev --optimize-autoloader --no-interaction
 

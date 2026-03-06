@@ -1,7 +1,7 @@
 version: "3.9"
 
 # =============================================================================
-# CorePHP (PHP-JVM) — Docker Compose Override
+# CorePHP — Docker Compose Override
 # Development overrides (automatically merged by docker compose)
 # =============================================================================
 

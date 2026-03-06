@@ -10,7 +10,7 @@ The `std` library is structured as a self-contained hexagon:
 ## Namespace Hierarchy
 
 ```
-std\
+core\
 ├── Engine\          # Boot-time engine patches (runkit7 overrides)
 │   └── FunctionOverrider
 ├── Internal\

@@ -26,7 +26,7 @@
 - PHP-CS-Fixer must pass on all PHP files
 
 ### C — Completion
-- `docker build -t php-jvm .` succeeds
+- `docker build -t corephp-vm .` succeeds
 - All CI checks pass (`make lint`, `make test`)
 - Memory Bank updated
 
@@ -59,7 +59,7 @@ All CI scripts are executed **inside the Docker container** to ensure reproducib
 ## Development Conventions
 
 1. All PHP files MUST begin with `declare(strict_types=1);`
-2. All classes MUST be namespaced under `std\*`
+2. All classes MUST be namespaced under `core\*`
 3. All public methods MUST have full return type declarations
 4. No `mixed` types in public interfaces
 5. No `array` types — use `TypedCollection` instead

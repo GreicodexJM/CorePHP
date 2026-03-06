@@ -41,13 +41,13 @@ PHP traditionally re-initializes on every request. CorePHP eliminates this by ru
 ### 1. Build the base image
 
 ```bash
-docker build -t php-jvm:latest .
+docker build -t corephp-vm:latest .
 ```
 
 ### 2. Use it as a base image in your project
 
 ```dockerfile
-FROM php-jvm:latest
+FROM corephp-vm:latest
 
 WORKDIR /app
 COPY . .
@@ -72,8 +72,8 @@ If you cannot use Docker (shared hosting, cPanel, Plesk), you can use a subset o
 
 ### Setup
 
-1. Upload `opt/php-jvm/` to a location **outside your web root** (e.g., `/home/user/php-jvm/`)
-2. Install the `std` library: `cd opt/php-jvm/std && composer install --no-dev`
+1. Upload `opt/corephp-vm/` to a location **outside your web root** (e.g., `/home/user/corephp-vm/`)
+2. Install the `std` library: `cd opt/corephp-vm/std && composer install --no-dev`
 3. Edit `.user.ini` and set the correct path to `bootstrap.php`
 4. Upload `.user.ini` to your web root (e.g., `public_html/`)
 
@@ -93,14 +93,14 @@ If you cannot use Docker (shared hosting, cPanel, Plesk), you can use a subset o
 
 ## 📦 Standard Library (`std`)
 
-The `std` library is automatically loaded via Composer. All classes are under the `std\` namespace.
+The `std` library is automatically loaded via Composer. All classes are under the `core\` namespace.
 
-### Pillar 1 — `std\Internal\Array\TypedCollection`
+### Pillar 1 — `core\Internal\Array\TypedCollection`
 
 A type-safe replacement for native PHP arrays:
 
 ```php
-use std\Internal\Array\TypedCollection;
+use core\Internal\Array\TypedCollection;
 
 // Class type enforcement
 $users = new TypedCollection(User::class);
@@ -121,13 +121,13 @@ foreach ($users as $user) {
 $admins = $users->filter(fn(User $u) => $u->isAdmin());
 ```
 
-### Pillar 2 — `std\Net\Http\HttpClient`
+### Pillar 2 — `core\Net\Http\HttpClient`
 
 A curl wrapper that converts ALL HTTP failures into exceptions:
 
 ```php
-use std\Net\Http\HttpClient;
-use std\Net\Http\HttpException;
+use core\Net\Http\HttpClient;
+use core\Net\Http\HttpException;
 
 $client = new HttpClient(timeout: 10, strictStatus: true);
 
@@ -145,15 +145,15 @@ try {
 }
 ```
 
-### Pillar 3 — `std\Security\Safe`
+### Pillar 3 — `core\Security\Safe`
 
 Safe replacements for PHP's silent-failure functions:
 
 ```php
-use std\Security\Safe\Safe;
-use std\Security\Safe\JsonDecodeException;
-use std\Security\Safe\TypeCoercionException;
-use std\Security\Safe\FileReadException;
+use core\Security\Safe\Safe;
+use core\Security\Safe\JsonDecodeException;
+use core\Security\Safe\TypeCoercionException;
+use core\Security\Safe\FileReadException;
 
 // json_decode — throws JsonDecodeException instead of returning null
 $data = Safe::jsonDecode('{"key":"value"}');
@@ -253,7 +253,7 @@ CorePHP/
 ├── .gitignore
 ├── config/
 │   └── php.ini                         # Hardened PHP configuration
-├── opt/php-jvm/
+├── opt/corephp-vm/
 │   ├── bootstrap.php                   # Auto-prepend sandbox
 │   └── std/
 │       ├── composer.json               # std library package
@@ -303,4 +303,4 @@ This project follows the Greicodex OS (GOS) standards. See `memory-bank/` for fu
 
 ## License
 
-MIT
+GPL3

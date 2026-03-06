@@ -60,17 +60,17 @@ All `runkit7_function_redefine()` calls are centralized in a single class with a
 ### Named Exception Hierarchy
 ```
 \RuntimeException
-├── \std\Net\Http\HttpException
-├── \std\Security\Exceptions\SecurityException
-└── \std\Security\Exceptions\EncodingException
+├── \core\Net\Http\HttpException
+├── \core\Security\Exceptions\SecurityException
+└── \core\Security\Exceptions\EncodingException
 
 \InvalidArgumentException
-├── \std\Security\Safe\JsonDecodeException
-├── \std\Security\Safe\JsonEncodeException
-├── \std\Security\Safe\TypeCoercionException
-├── \std\Security\Safe\FileReadException
-├── \std\Security\Safe\FileWriteException
-└── \std\Security\Safe\RegexException
+├── \core\Security\Safe\JsonDecodeException
+├── \core\Security\Safe\JsonEncodeException
+├── \core\Security\Safe\TypeCoercionException
+├── \core\Security\Safe\FileReadException
+├── \core\Security\Safe\FileWriteException
+└── \core\Security\Safe\RegexException
 ```
 
 ## Critical Implementation Notes

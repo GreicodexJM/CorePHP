@@ -1,13 +1,13 @@
 parameters:
     # ==========================================================================
-    # CorePHP (PHP-JVM) — PHPStan Configuration
+    # CorePHP — PHPStan Configuration
     # Level 9: the strictest analysis level
     # ==========================================================================
 
     level: 9
 
     paths:
-        - opt/php-jvm/std/src
+        - opt/corephp-vm/std/src
 
     # --------------------------------------------------------------------------
     # PHP version target
@@ -41,29 +41,29 @@ parameters:
     ignoreErrors:
         # runkit7 functions are defined at runtime — suppress undefined function errors
         - message: '#Function runkit7_function_redefine not found#'
-          path:    opt/php-jvm/std/src/Engine/FunctionOverrider.php
+          path:    opt/corephp-vm/std/src/Engine/FunctionOverrider.php
         - message: '#Call to an undefined function runkit7_function_redefine#'
-          path:    opt/php-jvm/std/src/Engine/FunctionOverrider.php
+          path:    opt/corephp-vm/std/src/Engine/FunctionOverrider.php
 
     # --------------------------------------------------------------------------
     # Bootstrap — autoloads the std library for analysis
     # --------------------------------------------------------------------------
     bootstrapFiles:
-        - opt/php-jvm/std/vendor/autoload.php
+        - opt/corephp-vm/std/vendor/autoload.php
 
     # --------------------------------------------------------------------------
     # Excluded paths
     # --------------------------------------------------------------------------
     excludePaths:
-        - opt/php-jvm/std/vendor
-        - opt/php-jvm/std/tests
+        - opt/corephp-vm/std/vendor
+        - opt/corephp-vm/std/tests
         - '*/vendor/*'
 
     # --------------------------------------------------------------------------
     # Custom type extensions (if added in future)
     # --------------------------------------------------------------------------
     # typeAliases:
-    #   CollectionOf: 'std\Internal\Array\TypedCollection<mixed>'
+    #   CollectionOf: 'core\Internal\Array\TypedCollection<mixed>'
 
 includes:
     # Include PHPStan extension installer if available

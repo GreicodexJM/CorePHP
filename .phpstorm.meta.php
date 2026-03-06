@@ -19,16 +19,16 @@ namespace PHPSTORM_META {
     // TypedCollection — return type inference based on constructor argument
     // =========================================================================
 
-    // std\Internal\Array\TypedCollection::__construct(Type::class)
+    // core\Internal\Array\TypedCollection::__construct(Type::class)
     // When you write new TypedCollection(User::class), IDE knows the type is User
     override(
-        \std\Internal\Array\TypedCollection::__construct(0),
+        \core\Internal\Array\TypedCollection::__construct(0),
         map(['' => '@'])
     );
 
-    // std\Vec — same inference
+    // core\Vec — same inference
     override(
-        \std\Vec::__construct(0),
+        \core\Vec::__construct(0),
         map(['' => '@'])
     );
 
@@ -43,7 +43,7 @@ namespace PHPSTORM_META {
     // =========================================================================
 
     override(
-        \std\Dict::__construct(0),
+        \core\Dict::__construct(0),
         map(['' => '@'])
     );
 
@@ -79,13 +79,13 @@ namespace PHPSTORM_META {
     );
 
     expectedArguments(
-        \std\Internal\Array\TypedCollection::__construct(),
+        \core\Internal\Array\TypedCollection::__construct(),
         0,
         argumentsSet('corephp_type_names')
     );
 
     expectedArguments(
-        \std\Vec::__construct(),
+        \core\Vec::__construct(),
         0,
         argumentsSet('corephp_type_names')
     );
@@ -97,7 +97,7 @@ namespace PHPSTORM_META {
     );
 
     expectedArguments(
-        \std\Dict::__construct(),
+        \core\Dict::__construct(),
         0,
         argumentsSet('corephp_type_names')
     );

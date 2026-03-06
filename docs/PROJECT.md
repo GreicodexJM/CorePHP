@@ -14,15 +14,15 @@ Copy and paste the following into your AI agent (Claude, GPT-4, etc.) to generat
 **Core Requirements:**
 
 1. **Runtime Architecture:** Use **PHP 8.3 CLI (Alpine)** with **RoadRunner** integrated as the application server (the persistent VM). Configure a `worker.php` loop that handles PSR-7 requests and contains a global `try/catch` block to prevent process death.
-2. **The "Prepend" Sandbox:** Create a `/opt/php-jvm/bootstrap.php` script and register it via `auto_prepend_file` in `php.ini`. This script must:
+2. **The "Prepend" Sandbox:** Create a `/opt/corephp-vm/bootstrap.php` script and register it via `auto_prepend_file` in `php.ini`. This script must:
 * Call `set_error_handler` to convert **all** Warnings, Notices, and Errors into `ErrorException`.
 * Initialize a Global Audit Handler (Sentry/Monolog) to report all uncaught Throwables.
-* Define a `std\StrictObject` abstract class that overrides `__get` and `__set` to throw exceptions, preventing dynamic/undefined property access.
+* Define a `core\StrictObject` abstract class that overrides `__get` and `__set` to throw exceptions, preventing dynamic/undefined property access.
 
 
-3. **The Standard Library (std):** Build a composer package located at `/opt/php-jvm/std` that is globally autoloaded. It must include:
-* `std\TypedCollection`: A class implementing `ArrayAccess` and `Iterator` that enforces type-safety (e.g., `new TypedCollection(User::class)`).
-* `std\Safe`: Static methods for `jsonDecode`, `toInt`, and `fileRead` that strictly throw exceptions on any failure.
+3. **The Standard Library (std):** Build a composer package located at `/opt/corephp-vm/std` that is globally autoloaded. It must include:
+* `core\TypedCollection`: A class implementing `ArrayAccess` and `Iterator` that enforces type-safety (e.g., `new TypedCollection(User::class)`).
+* `core\Safe`: Static methods for `jsonDecode`, `toInt`, and `fileRead` that strictly throw exceptions on any failure.
 
 
 4. **Enforcement Tooling:**
@@ -49,4 +49,4 @@ Copy and paste the following into your AI agent (Claude, GPT-4, etc.) to generat
 * **The `std` Package** replaces the "sloppy" parts of PHP with rigid, predictable structures.
 * **The Prepend Script** ensures that even if a developer writes "bad" code, the "JVM" catches it and audits it before it can crash the environment.
 
-Once the agent generates these files, you can build it with `docker build -t php-jvm .` and use it as the `FROM` image for all your future projects.
+Once the agent generates these files, you can build it with `docker build -t corephp-vm .` and use it as the `FROM` image for all your future projects.
