@@ -1,17 +1,17 @@
 # =============================================================================
 # CorePHP — Base Docker Image
-# PHP 8.3 CLI (Alpine) + RoadRunner + runkit7 + hardened php.ini
+# PHP 8.5 CLI (Alpine) + RoadRunner + runkit7 + hardened php.ini
 # =============================================================================
 # Usage:
 #   docker build -t corephp-vm:latest .
 #   FROM corephp-vm:latest   ← in your project's Dockerfile
 # =============================================================================
 
-FROM php:8.3-cli-alpine AS base
+FROM php:8.5-cli-alpine AS base
 
 LABEL maintainer="CorePHP"
-LABEL description="CorePHP: Persistent, hardened PHP 8.3 runtime with RoadRunner"
-LABEL version="1.0.0"
+LABEL description="CorePHP: Persistent, hardened PHP 8.5 runtime with RoadRunner"
+LABEL version="2.0.0"
 
 # ---------------------------------------------------------------------------
 # System dependencies
@@ -29,7 +29,7 @@ RUN apk add --no-cache \
         libzip-dev \
         oniguruma-dev \
     # Install PHP extensions
-    # Note: curl is already bundled in php:8.3-cli-alpine; do not reinstall
+    # Note: curl is already bundled in php:8.5-cli-alpine; do not reinstall
     && docker-php-ext-install -j$(nproc) \
         intl \
         zip \

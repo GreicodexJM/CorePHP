@@ -4,8 +4,8 @@
 
 | Component | Technology | Version |
 |---|---|---|
-| Runtime | PHP CLI | 8.3 |
-| Base OS | Alpine Linux | 3.19+ |
+| Runtime | PHP CLI | 8.5 |
+| Base OS | Alpine Linux | 3.21+ |
 | App Server | RoadRunner | 2024.1+ |
 | Function Override | runkit7 (PECL) | 4.0.0a6+ |
 | Package Manager | Composer | 2.x |
@@ -55,7 +55,7 @@ make build
 - Workers restart after `max_jobs` requests to prevent memory leaks (configurable)
 - Port 8080 is the default HTTP port
 
-### PHP 8.3 / Alpine Constraints
+### PHP 8.5 / Alpine Constraints
 - Alpine uses `musl libc` — some PECL extensions require extra build deps
 - `$PHPIZE_DEPS` must be installed before `pecl install`
 - Remove build deps after PECL install to keep image small
