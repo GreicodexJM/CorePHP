@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace core;
 
+use Psl\Dict as PslDict;
+
 /**
  * core\Dict — A typed key-value dictionary. (Java HashMap / Python dict equivalent)
  *
@@ -383,5 +385,122 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
             'boolean' => 'bool',
             default   => $type,
         };
+    }
+
+    // -------------------------------------------------------------------------
+    // PSL-backed static utilities (plain array, no type enforcement)
+    // Use these when you need quick functional operations on raw associative arrays.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Merge two or more plain associative arrays, later values win on collision.
+     * Backed by Psl\Dict\merge().
+     *
+     * @template Tk of array-key
+     * @template Tv
+     * @param array<Tk, Tv> $first
+     * @param array<Tk, Tv> $second
+     *
+     * @return array<Tk, Tv>
+     */
+    public static function mergeArrays(array $first, array $second): array
+    {
+        return PslDict\merge($first, $second);
+    }
+
+    /**
+     * Filter a plain associative array by value predicate, preserving keys.
+     * Backed by Psl\Dict\filter().
+     *
+     * @template Tk of array-key
+     * @template Tv
+     * @param array<Tk, Tv>      $data
+     * @param callable(Tv): bool $predicate
+     *
+     * @return array<Tk, Tv>
+     */
+    public static function filterArray(array $data, callable $predicate): array
+    {
+        return PslDict\filter($data, $predicate);
+    }
+
+    /**
+     * Filter a plain associative array by key predicate, preserving values.
+     * Backed by Psl\Dict\filter_keys().
+     *
+     * @template Tk of array-key
+     * @template Tv
+     * @param array<Tk, Tv>      $data
+     * @param callable(Tk): bool $predicate
+     *
+     * @return array<Tk, Tv>
+     */
+    public static function filterKeys(array $data, callable $predicate): array
+    {
+        return PslDict\filter_keys($data, $predicate);
+    }
+
+    /**
+     * Map over a plain associative array's values, preserving keys.
+     * Backed by Psl\Dict\map().
+     *
+     * @template Tk of array-key
+     * @template Tv
+     * @template Tu
+     * @param array<Tk, Tv>   $data
+     * @param callable(Tv): Tu $transform
+     *
+     * @return array<Tk, Tu>
+     */
+    public static function mapArray(array $data, callable $transform): array
+    {
+        return PslDict\map($data, $transform);
+    }
+
+    /**
+     * Select only the specified keys from a plain associative array.
+     * Backed by Psl\Dict\select_keys().
+     *
+     * @template Tk of array-key
+     * @template Tv
+     * @param array<Tk, Tv>  $data
+     * @param list<Tk>       $keys
+     *
+     * @return array<Tk, Tv>
+     */
+    public static function selectKeys(array $data, array $keys): array
+    {
+        return PslDict\select_keys($data, $keys);
+    }
+
+    /**
+     * Sort a plain associative array by value using a comparator, preserving keys.
+     * Backed by Psl\Dict\sort_by().
+     *
+     * @template Tk of array-key
+     * @template Tv
+     * @param array<Tk, Tv>         $data
+     * @param callable(Tv, Tv): int $comparator
+     *
+     * @return array<Tk, Tv>
+     */
+    public static function sortArray(array $data, callable $comparator): array
+    {
+        return PslDict\sort_by($data, static fn($v) => $v, $comparator);
+    }
+
+    /**
+     * Flip keys and values in a plain associative array.
+     * Backed by Psl\Dict\flip().
+     *
+     * @template Tk of array-key
+     * @template Tv of array-key
+     * @param array<Tk, Tv> $data
+     *
+     * @return array<Tv, Tk>
+     */
+    public static function flipArray(array $data): array
+    {
+        return PslDict\flip($data);
     }
 }

@@ -217,7 +217,7 @@ final class HttpClient
         // Prepare body and set method
         if ($body !== null) {
             if (is_array($body)) {
-                $encodedBody = \core\Security\Safe\Safe::jsonEncode($body);
+                $encodedBody = \Psl\Json\encode($body);
                 $headers['content-type'] = 'application/json';
                 curl_setopt($handle, CURLOPT_POSTFIELDS, $encodedBody);
             } else {

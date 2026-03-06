@@ -66,5 +66,7 @@ parameters:
     #   CollectionOf: 'core\Internal\Array\TypedCollection<mixed>'
 
 includes:
+    # PSL first-party PHPStan extension — provides precise types for all Psl\* functions
+    - opt/corephp-vm/std/vendor/php-standard-library/phpstan-extension/extension.neon
     # Include PHPStan extension installer if available
-    # - vendor/phpstan/extension-installer/loader.neon
+    # - opt/corephp-vm/std/vendor/phpstan/extension-installer/loader.neon

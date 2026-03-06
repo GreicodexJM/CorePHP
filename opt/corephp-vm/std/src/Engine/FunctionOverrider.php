@@ -6,12 +6,6 @@ namespace core\Engine;
 
 use core\Security\Exceptions\EncodingException;
 use core\Security\Exceptions\SecurityException;
-use core\Security\Safe\FileReadException;
-use core\Security\Safe\FileWriteException;
-use core\Security\Safe\JsonDecodeException;
-use core\Security\Safe\JsonEncodeException;
-use core\Security\Safe\RegexException;
-use core\Security\Safe\TypeCoercionException;
 
 /**
  * FunctionOverrider — runkit7 Native Function Override Registry
@@ -19,9 +13,24 @@ use core\Security\Safe\TypeCoercionException;
  * Replaces PHP's built-in functions that fail silently (returning false/null/0)
  * with versions that throw typed, named exceptions on any failure.
  *
+ * Exception mapping (runkit7 override bodies → PSL exception classes):
+ *   json_decode / json_encode    → \Psl\Json\Exception
+ *   file_get_contents            → \Psl\File\Exception\RuntimeException
+ *   file_put_contents            → \Psl\File\Exception\RuntimeException
+ *   intval / floatval            → \Psl\Type\Exception\CoercionException
+ *   preg_match / preg_*          → \Psl\Regex\Exception\RuntimeException
+ *   curl_exec                    → \core\Net\Http\HttpException  (no PSL HTTP client)
+ *   base64_decode                → \core\Security\Exceptions\EncodingException
+ *   unserialize                  → \core\Security\Exceptions\SecurityException
+ *
  * This class uses runkit7_function_redefine() which requires:
  *   - runkit7 PECL extension installed
  *   - runkit.internal_override = 1 in php.ini
+ *
+ * IMPORTANT: Override bodies are self-contained vanilla PHP strings.
+ *   They must NOT call PSL functions internally — PSL is built on the same
+ *   native PHP functions we override, which would cause infinite recursion.
+ *   Instead, they reference PSL *exception classes* by FQCN for consistency.
  *
  * install() is idempotent — safe to call multiple times (e.g., on worker restart).
  *
@@ -58,7 +67,7 @@ final class FunctionOverrider
     }
 
     // -------------------------------------------------------------------------
-    // JSON
+    // JSON — throws \Psl\Json\Exception
     // -------------------------------------------------------------------------
 
     private static function overrideJsonDecode(): void
@@ -75,7 +84,7 @@ final class FunctionOverrider
             try {
                 return \json_decode($json, $associative, $depth, $flags);
             } catch (\JsonException $e) {
-                throw new \core\Security\Safe\JsonDecodeException(
+                throw new \Psl\Json\Exception(
                     "json_decode failed: " . $e->getMessage() . " — input: " . substr($json, 0, 100),
                     (int) $e->getCode(),
                     $e
@@ -100,13 +109,13 @@ final class FunctionOverrider
             try {
                 $result = \json_encode($value, $flags, $depth);
                 if ($result === false) {
-                    throw new \core\Security\Safe\JsonEncodeException(
+                    throw new \Psl\Json\Exception(
                         "json_encode returned false for value of type: " . get_debug_type($value)
                     );
                 }
                 return $result;
             } catch (\JsonException $e) {
-                throw new \core\Security\Safe\JsonEncodeException(
+                throw new \Psl\Json\Exception(
                     "json_encode failed: " . $e->getMessage(),
                     (int) $e->getCode(),
                     $e
@@ -118,7 +127,7 @@ final class FunctionOverrider
     }
 
     // -------------------------------------------------------------------------
-    // File I/O
+    // File I/O — throws \Psl\File\Exception\RuntimeException
     // -------------------------------------------------------------------------
 
     private static function overrideFileGetContents(): void
@@ -132,18 +141,18 @@ final class FunctionOverrider
             'string $filename, bool $use_include_path = false, $context = null, int $offset = 0, ?int $length = null',
             '
             if (!file_exists($filename)) {
-                throw new \core\Security\Safe\FileReadException(
+                throw new \Psl\File\Exception\RuntimeException(
                     "file_get_contents: file does not exist: " . $filename
                 );
             }
             if (!is_readable($filename)) {
-                throw new \core\Security\Safe\FileReadException(
+                throw new \Psl\File\Exception\RuntimeException(
                     "file_get_contents: file is not readable: " . $filename
                 );
             }
             $result = \file_get_contents($filename, $use_include_path, $context, $offset, $length);
             if ($result === false) {
-                throw new \core\Security\Safe\FileReadException(
+                throw new \Psl\File\Exception\RuntimeException(
                     "file_get_contents: failed to read file: " . $filename
                 );
             }
@@ -165,7 +174,7 @@ final class FunctionOverrider
             '
             $result = \file_put_contents($filename, $data, $flags, $context);
             if ($result === false) {
-                throw new \core\Security\Safe\FileWriteException(
+                throw new \Psl\File\Exception\RuntimeException(
                     "file_put_contents: failed to write to file: " . $filename
                 );
             }
@@ -176,7 +185,7 @@ final class FunctionOverrider
     }
 
     // -------------------------------------------------------------------------
-    // Type coercion
+    // Type coercion — throws \Psl\Type\Exception\CoercionException
     // -------------------------------------------------------------------------
 
     private static function overrideIntval(): void
@@ -201,9 +210,9 @@ final class FunctionOverrider
             if (is_bool($value)) {
                 return (int) $value;
             }
-            throw new \core\Security\Safe\TypeCoercionException(
-                "intval: cannot safely coerce value of type " . get_debug_type($value) . " to int. "
-                . "Value: " . var_export($value, true)
+            throw \Psl\Type\Exception\CoercionException::withValue(
+                $value,
+                "int"
             );
             '
         );
@@ -226,9 +235,9 @@ final class FunctionOverrider
             if (is_string($value) && is_numeric($value)) {
                 return (float) $value;
             }
-            throw new \core\Security\Safe\TypeCoercionException(
-                "floatval: cannot safely coerce value of type " . get_debug_type($value) . " to float. "
-                . "Value: " . var_export($value, true)
+            throw \Psl\Type\Exception\CoercionException::withValue(
+                $value,
+                "float"
             );
             '
         );
@@ -236,7 +245,7 @@ final class FunctionOverrider
     }
 
     // -------------------------------------------------------------------------
-    // Regex
+    // Regex — throws \Psl\Regex\Exception\RuntimeException
     // -------------------------------------------------------------------------
 
     private static function overridePregMatch(): void
@@ -251,9 +260,9 @@ final class FunctionOverrider
             '
             $result = \preg_match($pattern, $subject, $matches, $flags, $offset);
             if ($result === false) {
-                throw new \core\Security\Safe\RegexException(
+                throw new \Psl\Regex\Exception\RuntimeException(
                     "preg_match failed with pattern: " . $pattern
-                    . " — error: " . array_flip(get_defined_constants(true)["pcre"])[preg_last_error()]
+                    . " — PCRE error code: " . preg_last_error()
                 );
             }
             return $result;
@@ -274,8 +283,9 @@ final class FunctionOverrider
             '
             $result = \preg_match_all($pattern, $subject, $matches, $flags, $offset);
             if ($result === false) {
-                throw new \core\Security\Safe\RegexException(
+                throw new \Psl\Regex\Exception\RuntimeException(
                     "preg_match_all failed with pattern: " . $pattern
+                    . " — PCRE error code: " . preg_last_error()
                 );
             }
             return $result;
@@ -296,8 +306,9 @@ final class FunctionOverrider
             '
             $result = \preg_replace($pattern, $replacement, $subject, $limit, $count);
             if ($result === null) {
-                throw new \core\Security\Safe\RegexException(
-                    "preg_replace returned null — PCRE error for pattern: " . (is_array($pattern) ? implode(", ", $pattern) : $pattern)
+                throw new \Psl\Regex\Exception\RuntimeException(
+                    "preg_replace returned null — PCRE error for pattern: "
+                    . (is_array($pattern) ? implode(", ", $pattern) : $pattern)
                 );
             }
             return $result;
@@ -307,7 +318,7 @@ final class FunctionOverrider
     }
 
     // -------------------------------------------------------------------------
-    // curl
+    // curl — throws \core\Net\Http\HttpException (no PSL HTTP client)
     // -------------------------------------------------------------------------
 
     private static function overrideCurlExec(): void
@@ -336,7 +347,7 @@ final class FunctionOverrider
     }
 
     // -------------------------------------------------------------------------
-    // Encoding
+    // Encoding — throws \core\Security\Exceptions\EncodingException (no PSL equivalent)
     // -------------------------------------------------------------------------
 
     private static function overrideBase64Decode(): void
@@ -362,8 +373,7 @@ final class FunctionOverrider
     }
 
     // -------------------------------------------------------------------------
-    // Security blocks (unserialize disabled in php.ini disable_functions,
-    // but we add a runtime guard here for belt-and-suspenders)
+    // Security blocks — throws \core\Security\Exceptions\SecurityException
     // -------------------------------------------------------------------------
 
     private static function overrideUnserializeGuard(): void

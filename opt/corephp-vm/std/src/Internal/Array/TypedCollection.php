@@ -4,12 +4,19 @@ declare(strict_types=1);
 
 namespace core\Internal\Array;
 
+use Psl\Vec;
+
 /**
  * TypedCollection — A type-safe, homogeneous collection.
  *
  * Replaces native PHP arrays where mixed types can silently corrupt data.
  * Every item added must be an instance of the declared type (for classes/interfaces)
  * or match the declared primitive type (for string, int, float, bool).
+ *
+ * Functional methods (filter, map, reduce, each, sort, reverse, slice, chunk)
+ * leverage azjezz/psl (Psl\Vec\*) for their implementations wherever the return
+ * type is a plain list. Methods that must return a typed collection build on PSL
+ * results then wrap them back into a new `static` of the same declared type.
  *
  * Implements ArrayAccess, Iterator, and Countable for drop-in compatibility
  * with foreach loops and count().
@@ -294,11 +301,12 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
     }
 
     // -------------------------------------------------------------------------
-    // Functional operations
+    // Functional operations (PSL-backed where possible)
     // -------------------------------------------------------------------------
 
     /**
      * Return a new TypedCollection containing only items matching the predicate.
+     * Backed by Psl\Vec\filter() internally; result is re-wrapped into a typed collection.
      *
      * @param callable(T): bool $predicate
      *
@@ -307,16 +315,15 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
     public function filter(callable $predicate): static
     {
         $filtered = new static($this->type);
-        foreach ($this->items as $item) {
-            if ($predicate($item)) {
-                $filtered->add($item);
-            }
+        foreach (Vec\filter($this->items, $predicate) as $item) {
+            $filtered->add($item);
         }
         return $filtered;
     }
 
     /**
      * Apply a transformation and return a new TypedCollection of the given output type.
+     * Backed by Psl\Vec\map() internally; result is re-wrapped into a typed collection.
      *
      * @template U
      * @param callable(T): U         $transform
@@ -327,8 +334,8 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
     public function map(callable $transform, string $outputType): static
     {
         $mapped = new static($outputType);
-        foreach ($this->items as $item) {
-            $mapped->add($transform($item));
+        foreach (Vec\map($this->items, $transform) as $item) {
+            $mapped->add($item);
         }
         return $mapped;
     }
@@ -361,6 +368,88 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
         foreach ($this->items as $index => $item) {
             $callback($item, $index);
         }
+    }
+
+    /**
+     * Return a new TypedCollection with items in reversed order.
+     * Backed by Psl\Vec\reverse().
+     *
+     * @return static<T>
+     */
+    public function reverse(): static
+    {
+        return static::fromArray($this->type, Vec\reverse($this->items));
+    }
+
+    /**
+     * Return a new TypedCollection with a slice of items.
+     * Backed by Psl\Vec\slice().
+     *
+     * @param int      $offset Zero-based start index
+     * @param int|null $length Maximum number of items (null = to end)
+     *
+     * @return static<T>
+     */
+    public function slice(int $offset, ?int $length = null): static
+    {
+        return static::fromArray($this->type, Vec\slice($this->items, $offset, $length));
+    }
+
+    /**
+     * Return the collection split into chunks of at most $size items.
+     * Each chunk is a new TypedCollection of the same declared type.
+     * Backed by Psl\Vec\chunk().
+     *
+     * @param positive-int $size Maximum items per chunk
+     *
+     * @return list<static<T>>
+     */
+    public function chunk(int $size): array
+    {
+        if ($size <= 0) {
+            throw new \InvalidArgumentException(
+                sprintf('TypedCollection::chunk() — $size must be a positive integer, got %d.', $size)
+            );
+        }
+        /** @var list<static<T>> $result */
+        $result = [];
+        foreach (Vec\chunk($this->items, $size) as $chunkItems) {
+            $result[] = static::fromArray($this->type, $chunkItems);
+        }
+        return $result;
+    }
+
+    /**
+     * Return a new TypedCollection sorted by a comparator.
+     * Backed by Psl\Vec\sort_by().
+     *
+     * @param callable(T, T): int $comparator
+     *
+     * @return static<T>
+     */
+    public function sort(callable $comparator): static
+    {
+        return static::fromArray($this->type, Vec\sort_by($this->items, static fn($a) => $a, $comparator));
+    }
+
+    /**
+     * Return a new TypedCollection with duplicate items removed (strict equality).
+     * Items are compared via spl_object_id for objects, or value equality for primitives.
+     *
+     * @return static<T>
+     */
+    public function unique(): static
+    {
+        $seen    = [];
+        $unique  = new static($this->type);
+        foreach ($this->items as $item) {
+            $key = is_object($item) ? spl_object_id($item) : serialize($item);
+            if (!isset($seen[$key])) {
+                $seen[$key] = true;
+                $unique->add($item);
+            }
+        }
+        return $unique;
     }
 
     // -------------------------------------------------------------------------

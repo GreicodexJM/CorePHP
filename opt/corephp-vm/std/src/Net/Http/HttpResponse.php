@@ -49,11 +49,11 @@ final class HttpResponse
      *
      * @param bool $associative Return as associative array instead of object
      *
-     * @throws \core\Security\Safe\JsonDecodeException if body is not valid JSON
+     * @throws \Psl\Json\Exception if body is not valid JSON
      */
     public function json(bool $associative = false): mixed
     {
-        return \core\Security\Safe\Safe::jsonDecode($this->body, $associative);
+        return \Psl\Json\decode($this->body, $associative);
     }
 
     /**

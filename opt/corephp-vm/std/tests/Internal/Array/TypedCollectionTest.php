@@ -309,4 +309,123 @@ final class TypedCollectionTest extends TestCase
         $col = TypedCollection::fromArray('string', ['a', 'b']);
         self::assertSame(['a', 'b'], $col->toArray());
     }
+
+    // =========================================================================
+    // PSL-backed: reverse()
+    // =========================================================================
+
+    public function testReverseReturnsReversedCollection(): void
+    {
+        $col      = TypedCollection::fromArray('int', [1, 2, 3]);
+        $reversed = $col->reverse();
+        self::assertSame([3, 2, 1], $reversed->toArray());
+    }
+
+    public function testReverseDoesNotMutateOriginal(): void
+    {
+        $col = TypedCollection::fromArray('int', [1, 2, 3]);
+        $col->reverse();
+        self::assertSame([1, 2, 3], $col->toArray());
+    }
+
+    public function testReverseReturnsSameType(): void
+    {
+        $col = TypedCollection::fromArray('int', [1, 2, 3]);
+        self::assertInstanceOf(TypedCollection::class, $col->reverse());
+    }
+
+    // =========================================================================
+    // PSL-backed: slice()
+    // =========================================================================
+
+    public function testSliceReturnsSubset(): void
+    {
+        $col   = TypedCollection::fromArray('int', [10, 20, 30, 40, 50]);
+        $slice = $col->slice(1, 3);
+        self::assertSame([20, 30, 40], $slice->toArray());
+    }
+
+    public function testSliceToEndWhenLengthNull(): void
+    {
+        $col   = TypedCollection::fromArray('int', [1, 2, 3, 4]);
+        $slice = $col->slice(2);
+        self::assertSame([3, 4], $slice->toArray());
+    }
+
+    public function testSliceDoesNotMutateOriginal(): void
+    {
+        $col = TypedCollection::fromArray('int', [1, 2, 3, 4]);
+        $col->slice(0, 2);
+        self::assertSame(4, count($col));
+    }
+
+    // =========================================================================
+    // PSL-backed: chunk()
+    // =========================================================================
+
+    public function testChunkSplitsCollection(): void
+    {
+        $col    = TypedCollection::fromArray('int', [1, 2, 3, 4, 5]);
+        $chunks = $col->chunk(2);
+        self::assertCount(3, $chunks);
+        self::assertSame([1, 2], $chunks[0]->toArray());
+        self::assertSame([3, 4], $chunks[1]->toArray());
+        self::assertSame([5],    $chunks[2]->toArray());
+    }
+
+    public function testChunkReturnsTypedCollections(): void
+    {
+        $col    = TypedCollection::fromArray('string', ['a', 'b', 'c']);
+        $chunks = $col->chunk(2);
+        self::assertInstanceOf(TypedCollection::class, $chunks[0]);
+    }
+
+    public function testChunkThrowsOnSizeZero(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        TypedCollection::fromArray('int', [1])->chunk(0);
+    }
+
+    // =========================================================================
+    // PSL-backed: sort()
+    // =========================================================================
+
+    public function testSortReturnsSortedCollection(): void
+    {
+        $col    = TypedCollection::fromArray('int', [3, 1, 4, 1, 5, 9, 2, 6]);
+        $sorted = $col->sort(fn(int $a, int $b) => $a <=> $b);
+        self::assertSame([1, 1, 2, 3, 4, 5, 6, 9], $sorted->toArray());
+    }
+
+    public function testSortDescending(): void
+    {
+        $col    = TypedCollection::fromArray('int', [3, 1, 2]);
+        $sorted = $col->sort(fn(int $a, int $b) => $b <=> $a);
+        self::assertSame([3, 2, 1], $sorted->toArray());
+    }
+
+    public function testSortDoesNotMutateOriginal(): void
+    {
+        $col = TypedCollection::fromArray('int', [3, 1, 2]);
+        $col->sort(fn($a, $b) => $a <=> $b);
+        self::assertSame([3, 1, 2], $col->toArray());
+    }
+
+    // =========================================================================
+    // PSL-backed: unique()
+    // =========================================================================
+
+    public function testUniqueRemovesDuplicates(): void
+    {
+        $col    = TypedCollection::fromArray('int', [1, 2, 2, 3, 3, 3]);
+        $unique = $col->unique();
+        self::assertSame([1, 2, 3], $unique->toArray());
+    }
+
+    public function testUniqueDoesNotMutateOriginal(): void
+    {
+        $col = TypedCollection::fromArray('int', [1, 1, 2]);
+        $col->unique();
+        self::assertSame(3, count($col));
+    }
 }

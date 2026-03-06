@@ -4,8 +4,9 @@
 - ✅ Memory Bank initialized (all GOS-required files)
 - ✅ Makefile + Docker Compose (production + development override)
 - ✅ **Dockerfile builds successfully** (`docker build -t corephp-vm:latest .` exit code 0)
-  - PHP 8.3 CLI Alpine + runkit7 (built from GitHub source) + RoadRunner 2024.1.5
+  - PHP 8.4 CLI Alpine + runkit7 (built from GitHub source, patched for PHP 8.4 API) + RoadRunner 2024.1.5
   - `auto_prepend_file=""` override prevents bootstrap from running during `composer install`
+  - `bcmath` PHP extension added (required by `azjezz/psl ^4.2`)
 - ✅ Hardened php.ini (disable_functions + runkit.internal_override + prepend sandbox)
 - ✅ .rr.yaml (RoadRunner config with worker pool + supervisor)
 - ✅ worker.php (PSR-7 request loop with global Throwable catch)
@@ -17,11 +18,11 @@
   - `core\Vec` — typed sequential list (`ArrayList` alias)
   - `core\Dict` — typed key-value store (`Dict` alias in global ns)
   - `core\IO` — safe file + HTTP facade (`IO` alias in global ns)
-  - `core\Security\Safe\Safe` — safe stdlib (`Safe` alias in global ns)
-  - `src/functions.php` — global shims (`s_json`, `s_int`, `s_float`, `s_file`, `s_write`, `s_get`, `s_post`)
-- ✅ `core\Internal\Array\TypedCollection` (Pillar 1)
+  - ~~`core\Security\Safe\Safe`~~ — **Deleted** (replaced by azjezz/psl)
+  - `src/functions.php` — 20 global shims (`s_json`, `s_enc`, `s_int`, `s_float`, `s_str`, `s_bool`, `s_file`, `s_write`, `s_append`, `s_fwrite`, `s_match`, `s_regex`, `s_regex_all`, `s_env`, `s_env_or`, `s_get`, `s_post`, `vec_filter`, `vec_map`, `dict_filter`, `dict_map`, `dict_merge`)
+- ✅ `core\Internal\Array\TypedCollection` (Pillar 1) — PSL-backed: filter, map, reverse, slice, chunk, sort, unique
 - ✅ `core\Net\Http\HttpClient + HttpResponse + HttpException` (Pillar 2)
-- ✅ `core\Security\Safe\Safe` + 6 typed exceptions (Pillar 3)
+- ✅ **azjezz/psl ^2.9** (Pillar 3) — JSON, File, Type coercion, Regex, Vec, Dict, Env
 - ✅ `.php-cs-fixer.dist.php` (declare strict_types enforcement)
 - ✅ `phpstan.neon` (Level 9)
 - ✅ `ci/lint.sh` + `ci/test.sh`
@@ -105,6 +106,30 @@ Required GitHub Secrets:
 - runkit7 must be built from GitHub source — PECL registry does not have the package
 - `core\Vec` extends `TypedCollection` which is fine; PHPStan will follow the chain
 
+## What Was Added (2026-03-06 — PSL Integration)
+
+- ✅ **azjezz/psl integrated as Layer 2** (replaces hand-rolled `core\Security\Safe`)
+  - `azjezz/psl ^2.9` added to composer.json `require`
+  - `php-standard-library/phpstan-extension ^2.0` added to composer.json `require-dev`
+  - `phpstan.neon` includes PSL extension neon for precise type inference
+- ✅ **Deleted (replaced by PSL):**
+  - `Security/Safe/Safe.php` + 6 exception classes (7 files removed)
+  - `tests/Security/Safe/SafeTest.php` (replaced by `FunctionShimsTest.php`)
+- ✅ **Updated to use PSL directly:**
+  - `IO.php` → `Psl\File\read/write` + `Psl\Json\decode/encode`, new `append()` method
+  - `HttpClient.php` → `Psl\Json\encode()` for request body
+  - `HttpResponse.php` → `Psl\Json\decode()` for `json()` method
+  - `FunctionOverrider.php` → override bodies reference PSL exception FQCNs
+- ✅ **TypedCollection PSL integration:**
+  - `filter/map` backed by `Psl\Vec\filter/map` internally
+  - New methods: `reverse()`, `slice()`, `chunk()`, `sort()`, `unique()`
+- ✅ **Vec PSL static utilities:** `values`, `filterValues`, `mapValues`, `sortedValues`, `reversedValues`, `concat`, `range`
+- ✅ **Dict PSL static utilities:** `mergeArrays`, `filterArray`, `filterKeys`, `mapArray`, `selectKeys`, `sortArray`, `flipArray`
+- ✅ **Expanded functions.php** — 20 global shims (up from 7):
+  - New: `s_str`, `s_bool`, `s_append`, `s_fwrite`, `s_match`, `s_regex`, `s_regex_all`, `s_env`, `s_env_or`, `vec_filter`, `vec_map`, `dict_filter`, `dict_map`, `dict_merge`
+- ✅ **FunctionShimsTest.php** — 57 new tests covering all 25 shims
+- ✅ **TypedCollectionTest.php** — 15 new tests for PSL-backed methods
+
 ## Evolution of Decisions
 - 2026-03-06: Project initialized from `docs/PROJECT.md`
 - 2026-03-06: Three Safety Pillars architecture finalized
@@ -117,3 +142,10 @@ Required GitHub Secrets:
 - 2026-03-06: `TypedCollection` final → open (required by Vec inheritance)
 - 2026-03-06: `HttpClient` timeout guard, `HttpResponse::isOk()`, `header()` → `?string`
 - 2026-03-06: `docs/std/` documentation suite written (7 files)
+- 2026-03-06: azjezz/psl integrated as Layer 2 — `core\Security\Safe` deleted, PSL exceptions adopted project-wide
+- 2026-03-06: functions.php expanded from 7 to 20 global shims backed by PSL
+- 2026-03-06: TypedCollection gains 5 PSL-backed methods (reverse, slice, chunk, sort, unique)
+- 2026-03-06: Vec/Dict gain PSL-backed static utility methods
+- 2026-03-06: FunctionShimsTest.php written (57 tests); IOTest updated to PSL exceptions
+- 2026-03-06: PSL upgraded from ^2.9 → ^4.2 (latest stable); WriteMode enum cases fixed (SCREAMING_SNAKE_CASE → PascalCase: OpenOrCreate, Append)
+- 2026-03-06: **Build fix** — `php:8.5-cli-alpine` → `php:8.4-cli-alpine` (runkit7 GitHub main incompatible with PHP 8.5 Zend API); 2 targeted sed patches applied to runkit7 for PHP 8.4 (`rebuild_object_properties` rename + `info.user.doc_comment` struct change); `bcmath` extension added (required by `azjezz/psl ^4.2`); `phpstan/phpstan ^1.11` → `^2.0` in std `require-dev` (required by `php-standard-library/phpstan-extension ^2.0`); composer.json PHP constraints updated to `^8.4`

@@ -6,13 +6,11 @@ namespace core\Tests;
 
 use PHPUnit\Framework\TestCase;
 use core\IO;
-use core\Security\Safe\FileReadException;
-use core\Security\Safe\FileWriteException;
-use core\Security\Safe\JsonDecodeException;
+use Psl\File\Exception\RuntimeException as FileException;
+use Psl\Json\Exception as JsonException;
 
 /**
  * @covers \core\IO
- * @uses   \core\Security\Safe\Safe
  * @uses   \core\Net\Http\HttpClient
  */
 final class IOTest extends TestCase
@@ -48,7 +46,7 @@ final class IOTest extends TestCase
 
     public function testReadThrowsOnMissingFile(): void
     {
-        $this->expectException(FileReadException::class);
+        $this->expectException(FileException::class);
         IO::read('/no/such/file.txt');
     }
 
@@ -63,6 +61,13 @@ final class IOTest extends TestCase
         self::assertSame('data', file_get_contents($this->tmpFile));
     }
 
+    public function testWriteReturnsByteCount(): void
+    {
+        $data  = 'hello world';
+        $bytes = IO::write($this->tmpFile, $data);
+        self::assertSame(strlen($data), $bytes);
+    }
+
     public function testWriteAppendsWhenFlagTrue(): void
     {
         IO::write($this->tmpFile, 'first');
@@ -72,9 +77,20 @@ final class IOTest extends TestCase
 
     public function testWriteThrowsOnUnwritablePath(): void
     {
-        // /dev/null is a character device — no file can be created inside it
-        $this->expectException(FileWriteException::class);
+        $this->expectException(FileException::class);
         IO::write('/dev/null/cannot_write_here.txt', 'data');
+    }
+
+    // =========================================================================
+    // append()
+    // =========================================================================
+
+    public function testAppendAddsToExistingFile(): void
+    {
+        IO::write($this->tmpFile, 'first');
+        $bytes = IO::append($this->tmpFile, ' appended');
+        self::assertSame(strlen(' appended'), $bytes);
+        self::assertSame('first appended', file_get_contents($this->tmpFile));
     }
 
     // =========================================================================
@@ -90,14 +106,14 @@ final class IOTest extends TestCase
 
     public function testJsonThrowsOnMissingFile(): void
     {
-        $this->expectException(FileReadException::class);
+        $this->expectException(FileException::class);
         IO::json('/no/such/file.json');
     }
 
     public function testJsonThrowsOnInvalidJson(): void
     {
         file_put_contents($this->tmpJsonFile, 'not valid json');
-        $this->expectException(JsonDecodeException::class);
+        $this->expectException(JsonException::class);
         IO::json($this->tmpJsonFile);
     }
 
@@ -112,6 +128,13 @@ final class IOTest extends TestCase
         self::assertGreaterThan(0, $bytes);
         $decoded = json_decode(file_get_contents($this->tmpJsonFile), true);
         self::assertSame($data, $decoded);
+    }
+
+    public function testWriteJsonReturnsByteCount(): void
+    {
+        $data  = ['key' => 'value'];
+        $bytes = IO::writeJson($this->tmpJsonFile, $data);
+        self::assertSame(filesize($this->tmpJsonFile), $bytes);
     }
 
     // =========================================================================

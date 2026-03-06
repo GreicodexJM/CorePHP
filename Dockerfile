@@ -1,16 +1,16 @@
 # =============================================================================
 # CorePHP — Base Docker Image
-# PHP 8.5 CLI (Alpine) + RoadRunner + runkit7 + hardened php.ini
+# PHP 8.4 CLI (Alpine) + RoadRunner + runkit7 + hardened php.ini
 # =============================================================================
 # Usage:
 #   docker build -t corephp-vm:latest .
 #   FROM corephp-vm:latest   ← in your project's Dockerfile
 # =============================================================================
 
-FROM php:8.5-cli-alpine AS base
+FROM php:8.4-cli-alpine AS base
 
 LABEL maintainer="CorePHP"
-LABEL description="CorePHP: Persistent, hardened PHP 8.5 runtime with RoadRunner"
+LABEL description="CorePHP: Persistent, hardened PHP 8.4 runtime with RoadRunner"
 LABEL version="2.0.0"
 
 # ---------------------------------------------------------------------------
@@ -29,8 +29,9 @@ RUN apk add --no-cache \
         libzip-dev \
         oniguruma-dev \
     # Install PHP extensions
-    # Note: curl is already bundled in php:8.5-cli-alpine; do not reinstall
+    # Note: curl is already bundled in php:8.4-cli-alpine; do not reinstall
     && docker-php-ext-install -j$(nproc) \
+        bcmath \
         intl \
         zip \
         mbstring \
@@ -40,6 +41,13 @@ RUN apk add --no-cache \
     # runkit.internal_override = 1 in php.ini is required to override built-ins
     # ---------------------------------------------------------------------------
     && git clone --depth=1 https://github.com/runkit7/runkit7.git /tmp/runkit7 \
+    # PHP 8.4 compat patches for runkit7:
+    # 1. rebuild_object_properties() was renamed in PHP 8.4
+    && sed -i 's/rebuild_object_properties(/rebuild_object_properties_internal(/g' \
+           /tmp/runkit7/runkit_props.c \
+    # 2. doc_comment moved from info.user sub-struct to direct field in PHP 8.4
+    && sed -i 's/info\.user\.doc_comment/doc_comment/g' \
+           /tmp/runkit7/runkit_classes.c \
     && cd /tmp/runkit7 \
     && phpize \
     && ./configure \
@@ -81,7 +89,7 @@ COPY config/php.ini /usr/local/etc/php/php.ini
 # ---------------------------------------------------------------------------
 COPY opt/corephp-vm/ /opt/corephp-vm/
 RUN cd /opt/corephp-vm/std \
-    && php -d auto_prepend_file="" /usr/local/bin/composer install \
+    && php -d auto_prepend_file="" /usr/local/bin/composer update \
         --no-dev --optimize-autoloader --no-interaction
 
 # ---------------------------------------------------------------------------
