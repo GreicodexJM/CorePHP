@@ -63,9 +63,13 @@ RUN apk add --no-cache \
 # RoadRunner binary
 # ---------------------------------------------------------------------------
 ARG RR_VERSION=2024.1.5
+# TARGETARCH is injected automatically by Docker BuildKit for multi-platform builds.
+# Declaring it here activates the injection (values: amd64, arm64, etc.).
+# RoadRunner release filenames match Docker's TARGETARCH values exactly.
+ARG TARGETARCH
 RUN mkdir -p /tmp/rr-extract \
     && curl -sSfL \
-    "https://github.com/roadrunner-server/roadrunner/releases/download/v${RR_VERSION}/roadrunner-${RR_VERSION}-linux-amd64.tar.gz" \
+    "https://github.com/roadrunner-server/roadrunner/releases/download/v${RR_VERSION}/roadrunner-${RR_VERSION}-linux-${TARGETARCH}.tar.gz" \
     -o /tmp/rr.tar.gz \
     && tar -xzf /tmp/rr.tar.gz -C /tmp/rr-extract --strip-components=1 \
     && mv /tmp/rr-extract/rr /usr/local/bin/rr \
@@ -84,12 +88,14 @@ COPY config/php.ini /usr/local/etc/php/php.ini
 
 # ---------------------------------------------------------------------------
 # std library — install globally
-# auto_prepend_file is disabled here because bootstrap.php depends on
-# Psr\Log which is not yet installed at this build stage.
+# Both auto_prepend_file and disable_functions are cleared here:
+#   - auto_prepend_file: bootstrap.php requires Psr\Log which isn't installed yet
+#   - disable_functions: Composer requires proc_open to resolve dependencies;
+#     the hardened php.ini disables it, so we must override it for this step.
 # ---------------------------------------------------------------------------
 COPY opt/corephp-vm/ /opt/corephp-vm/
 RUN cd /opt/corephp-vm/std \
-    && php -d auto_prepend_file="" /usr/local/bin/composer update \
+    && php -d auto_prepend_file="" -d disable_functions="" /usr/local/bin/composer update \
         --no-dev --optimize-autoloader --no-interaction
 
 # ---------------------------------------------------------------------------
@@ -97,7 +103,7 @@ RUN cd /opt/corephp-vm/std \
 # ---------------------------------------------------------------------------
 WORKDIR /app
 COPY composer.json composer.lock* ./
-RUN php -d auto_prepend_file="" /usr/local/bin/composer install \
+RUN php -d auto_prepend_file="" -d disable_functions="" /usr/local/bin/composer install \
     --no-dev --optimize-autoloader --no-interaction 2>/dev/null || true
 
 COPY . .

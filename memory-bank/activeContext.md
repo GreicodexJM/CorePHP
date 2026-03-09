@@ -2,8 +2,23 @@
 
 ## Current Status
 🟢 **All quality gates passing** — PHPStan Level 9 (`[OK] No errors`), PHPUnit (`OK 208 tests, 271 assertions`), CS-Fixer (`0 violations`)
+🟢 **Docker build regression fixed** — GitHub Actions `docker push` was failing with exit code 255 on `composer update`; root cause identified and patched.
 
-## Last Session (2026-03-09 — Improvement & Cleanup)
+## Last Session (2026-03-09 — Docker Build Regression Fix)
+
+### What Was Done
+Fixed a Docker build regression introduced by the previous session's `disable_functions` security fix.
+
+**Root Cause:**
+The 2026-03-09 cleanup session correctly consolidated `disable_functions` in `config/php.ini` from a broken multiline format (only `unserialize,` was parsed) to a single-line format that now correctly disables all 34 functions — including **`proc_open`**. Composer requires `proc_open` to spawn subprocesses during dependency resolution. The Dockerfile copies the hardened `php.ini` *before* running `composer update`, so Composer hit the disabled `proc_open` → PHP fatal error → **exit code 255**.
+
+This is the same reason `config/php-ci.ini` already has `disable_functions =` (empty) — the need was already known for PHPUnit/PHPStan but wasn't applied to Dockerfile build steps.
+
+**Fixes applied to `Dockerfile`:**
+1. Added `-d disable_functions=""` to both `php` invocations that run Composer (std library `composer update` and root `composer install`), alongside the existing `-d auto_prepend_file=""` override.
+2. Fixed a **latent multi-platform bug**: RoadRunner binary download was hardcoded to `linux-amd64`. The CI pipeline builds for `linux/arm64` (confirmed by `/dev/.buildkit_qemu_emulator` in the error). Added `ARG TARGETARCH` to activate Docker BuildKit's automatic architecture injection, then substituted `${TARGETARCH}` into the download URL. RoadRunner release filenames match Docker's `TARGETARCH` values exactly (`amd64`, `arm64`).
+
+## Previous Session (2026-03-09 — Improvement & Cleanup)
 
 ### What Was Done
 Systematic audit of the project — found and fixed 2 security bugs, 1 runtime bug, 11 PHPUnit deprecations, 1 PHPUnit warning, and performed maintenance cleanup.

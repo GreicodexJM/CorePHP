@@ -94,6 +94,16 @@ Required GitHub Secrets:
 - `DOCKERHUB_USERNAME` = `greicodex`
 - `DOCKERHUB_TOKEN` = Docker Hub access token (Account Settings → Security)
 
+## What Was Fixed (2026-03-09 — Docker Build Regression Fix)
+
+### Dockerfile: Composer build failure (exit code 255) ✅
+- **Root Cause:** Previous session's `disable_functions` fix correctly consolidated the ini setting to a single line, making all 34 functions actually disabled — including `proc_open`. Composer uses `proc_open` to spawn subprocess resolvers. The hardened `php.ini` was copied into the image *before* the `composer update` step, so Composer hit the disabled `proc_open` → PHP fatal error → exit 255 in QEMU.
+- **Fix:** Added `-d disable_functions=""` to both `php` invocations in the Dockerfile (std library `composer update` and root `composer install`). Both now override `auto_prepend_file=""` AND `disable_functions=""` — same pattern already used in `config/php-ci.ini`.
+
+### Dockerfile: Hardcoded `linux-amd64` RoadRunner binary ✅
+- **Root Cause:** RoadRunner was downloaded as `linux-amd64` unconditionally. The GitHub Actions pipeline builds for `linux/arm64` (QEMU emulation confirmed by `/dev/.buildkit_qemu_emulator` in the error log). The wrong-arch binary would have silently been installed, causing `rr` to crash at container startup.
+- **Fix:** Added `ARG TARGETARCH` before the download step to activate Docker BuildKit's automatic architecture injection. Substituted `${TARGETARCH}` into the download URL. RoadRunner release filenames match Docker's TARGETARCH values exactly (`amd64`, `arm64`).
+
 ## What Was Fixed (2026-03-09 — Improvement & Cleanup Session)
 
 ### Security Fixes ✅
