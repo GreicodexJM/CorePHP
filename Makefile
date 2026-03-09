@@ -8,7 +8,7 @@ IMAGE_TAG   := latest
 CONTAINER   := corephp-vm-app
 COMPOSE     := docker compose
 
-.PHONY: help build up down restart shell check test lint lint-fix rr-start logs clean
+.PHONY: help build up down restart shell check test lint lint-fix ci-test ci-lint rr-start logs clean
 
 # Default target
 help: ## Show available targets
@@ -45,23 +45,50 @@ shell: ## Open a bash shell in the running container
 	$(COMPOSE) exec app sh
 
 # ---------------------------------------------------------------------------
-# Quality gates (run inside container)
+# Quality gates
+# ---------------------------------------------------------------------------
+# Two flavours:
+#   make test / make lint      — run inside a RUNNING compose container (make up first)
+#   make ci-test / make ci-lint — standalone, ephemeral docker run (no make up needed)
+#
+# The CI targets mount config/php-ci.ini which disables disable_functions so
+# PHPStan (uses unserialize) and PHPUnit (uses proc_open) work cleanly.
 # ---------------------------------------------------------------------------
 
-check: ## Run tests + lint in sequence (full quality gate before committing)
+CI_INI := $(PWD)/config/php-ci.ini
+
+check: ## Run tests + lint in sequence via compose (full quality gate; requires make up)
 	@echo "→ Running full quality gate..."
 	$(COMPOSE) exec app sh /app/ci/test.sh
 	$(COMPOSE) exec app sh /app/ci/lint.sh
 	@echo "✓ All checks passed"
 
-lint: ## Run PHP-CS-Fixer (dry-run) + PHPStan Level 9
+lint: ## Run PHPStan Level 9 + CS-Fixer dry-run (requires running compose container)
 	$(COMPOSE) exec app sh /app/ci/lint.sh
 
-lint-fix: ## Auto-fix PHP-CS-Fixer violations
-	$(COMPOSE) exec app sh -c "cd /app && vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php"
+lint-fix: ## Auto-fix PHP-CS-Fixer violations (requires running compose container)
+	$(COMPOSE) exec app sh -c "cd /app && opt/corephp-vm/std/vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php"
 
-test: ## Run PHPUnit test suite
+test: ## Run PHPUnit test suite (requires running compose container)
 	$(COMPOSE) exec app sh /app/ci/test.sh
+
+ci-test: ## Run PHPUnit standalone (no compose needed; mounts CI php.ini)
+	@echo "→ Running PHPUnit (standalone)..."
+	docker run --rm \
+	  -v $(PWD):/app \
+	  -v $(CI_INI):/usr/local/etc/php/php.ini:ro \
+	  $(IMAGE_NAME):$(IMAGE_TAG) \
+	  sh /app/ci/test.sh
+	@echo "✓ Tests passed"
+
+ci-lint: ## Run PHPStan + CS-Fixer standalone (no compose needed; mounts CI php.ini)
+	@echo "→ Running lint (standalone)..."
+	docker run --rm \
+	  -v $(PWD):/app \
+	  -v $(CI_INI):/usr/local/etc/php/php.ini:ro \
+	  $(IMAGE_NAME):$(IMAGE_TAG) \
+	  sh /app/ci/lint.sh
+	@echo "✓ Lint passed"
 
 # ---------------------------------------------------------------------------
 # RoadRunner

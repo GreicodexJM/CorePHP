@@ -32,18 +32,20 @@ final class HttpClient
     private const USER_AGENT            = 'CorePHP-HttpClient/1.0 (PHP-JVM)';
 
     /**
-     * @param int  $timeout        Maximum total execution time in seconds
-     * @param int  $connectTimeout Connection timeout in seconds
-     * @param bool $strictStatus   If true, throw HttpException on 4xx/5xx responses
-     * @param bool $followRedirects If true, follow HTTP redirects
-     * @param int  $maxRedirects   Maximum number of redirects to follow
+     * @param int                   $timeout        Maximum total execution time in seconds
+     * @param int                   $connectTimeout Connection timeout in seconds
+     * @param bool                  $strictStatus   If true, throw HttpException on 4xx/5xx responses
+     * @param bool                  $followRedirects If true, follow HTTP redirects
+     * @param int                   $maxRedirects   Maximum number of redirects to follow
+     * @param array<string, string> $defaultHeaders  Headers sent with every request (merged before per-request headers)
      */
     public function __construct(
-        private readonly int  $timeout        = self::DEFAULT_TIMEOUT,
-        private readonly int  $connectTimeout = self::DEFAULT_CONNECT_TIMEOUT,
-        private readonly bool $strictStatus   = false,
-        private readonly bool $followRedirects = true,
-        private readonly int  $maxRedirects   = 5,
+        private readonly int   $timeout        = self::DEFAULT_TIMEOUT,
+        private readonly int   $connectTimeout = self::DEFAULT_CONNECT_TIMEOUT,
+        private readonly bool  $strictStatus   = false,
+        private readonly bool  $followRedirects = true,
+        private readonly int   $maxRedirects   = 5,
+        private readonly array $defaultHeaders  = [],
     ) {
         if ($this->timeout <= 0) {
             throw new \InvalidArgumentException(
@@ -96,6 +98,20 @@ final class HttpClient
     public function put(string $url, array|string $body = [], array $headers = []): HttpResponse
     {
         return $this->execute($url, 'PUT', $body, $headers);
+    }
+
+    /**
+     * Perform an HTTP PATCH request.
+     *
+     * @param string                      $url
+     * @param array<string, mixed>|string $body
+     * @param array<string, string>       $headers
+     *
+     * @throws HttpException
+     */
+    public function patch(string $url, array|string $body = [], array $headers = []): HttpResponse
+    {
+        return $this->execute($url, 'PATCH', $body, $headers);
     }
 
     /**
@@ -196,6 +212,9 @@ final class HttpClient
         array|string|null  $body,
         array              $extraHeaders
     ): void {
+        // URL is already validated as non-empty in execute(); assert here for PHPStan
+        assert($url !== '', 'HttpClient: URL must be non-empty at this point.');
+
         curl_setopt_array($handle, [
             CURLOPT_URL            => $url,
             CURLOPT_RETURNTRANSFER => true,
@@ -209,8 +228,10 @@ final class HttpClient
             CURLOPT_ENCODING       => '',
         ]);
 
+        // Header priority (lowest → highest): base defaults, per-client defaults, per-request
         $headers = array_merge(
             ['accept' => 'application/json'],
+            array_change_key_case($this->defaultHeaders, CASE_LOWER),
             array_change_key_case($extraHeaders, CASE_LOWER)
         );
 
@@ -221,6 +242,7 @@ final class HttpClient
                 $headers['content-type'] = 'application/json';
                 curl_setopt($handle, CURLOPT_POSTFIELDS, $encodedBody);
             } else {
+                // @phpstan-ignore-next-line argument.type (raw string body may be empty for valid POST requests)
                 curl_setopt($handle, CURLOPT_POSTFIELDS, $body);
             }
         }

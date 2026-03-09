@@ -1,10 +1,54 @@
 # Active Context: CorePHP (PHP-JVM)
 
 ## Current Work Focus
-✅ **AI-Agent Documentation Layer complete — repo is now fully oriented for LLM/coding agents.**
+✅ **PHPStan Level 9 clean pass achieved — 56 pre-existing type errors fixed across all source files.**
 
 ## Status
-🟢 **COMPLETE** — All AI-agent instruction files created; memory bank updated.
+🟢 **COMPLETE** — PHPStan: 0 errors | PHPUnit: 208/208 tests pass.
+
+## What Was Fixed (PHPStan / CI Hardening Session — 2026-03-09)
+
+### Problem Discovered
+PHPStan Level 9 had **never actually run clean** on this project. Three infrastructure bugs prevented it:
+1. `ci/lint.sh` and `ci/test.sh` referenced a stale path (`opt/php-jvm/std/` → `opt/corephp-vm/std/`)
+2. `phpstan.neon` used removed PHPStan 2.x parameters and was missing the `parallel: maximumNumberOfProcesses: 1` setting required inside Docker
+3. Production `php.ini` has `disable_functions = unserialize,` — PHPStan uses `unserialize()` for its cache, so it silently failed
+
+### Fixes Applied
+
+#### Infrastructure ✅
+- **`ci/lint.sh`** — corrected path from `opt/php-jvm/std/` to `opt/corephp-vm/std/`
+- **`ci/test.sh`** — same path correction
+- **`phpstan.neon`** — removed deprecated params (`checkMissingIterableValueType`, `checkGenericClassInNonGenericObjectType`, `checkAlwaysTrueCheckTypeFunctionCall`); added `parallel: maximumNumberOfProcesses: 1`
+- **`config/php-ci.ini`** — new file: identical to `php.ini` but with `disable_functions =` (empty) for CI tools
+
+#### PHPStan Type Fixes (56 errors → 0) ✅
+| Category | Files | Fix Applied |
+|---|---|---|
+| `@throws \Psl\Json\Exception` (non-Throwable) | `IO.php`, `HttpResponse.php`, `functions.php` | Updated to `\Psl\Json\Exception\DecodeException` / `EncodeException` |
+| `callable` vs `Closure` (PSL 4.x strict) | `Vec.php`, `Dict.php`, `TypedCollection.php`, `functions.php` | Wrapped with `\Closure::fromCallable($fn)` before PSL calls |
+| `non-empty-string` for `Psl\File\read/write` | `IO.php`, `functions.php` | Added `assert($path !== '')` to narrow type |
+| `non-empty-string` for `Psl\Env\get_var` | `functions.php` | Added `assert($key !== '')` |
+| `int<0, max>` for `Psl\Vec\slice` | `TypedCollection.php` | Added `assert($offset >= 0)` and `assert($length === null \|\| $length >= 0)` |
+| `new static()` unsafe | `TypedCollection.php` | Added `@phpstan-consistent-constructor` to class docblock + `/** @var static<T> */` casts |
+| `TypedCollection::fromArray()` return type | `TypedCollection.php` | Changed `@param array<mixed>` (items already validated at runtime) |
+| `Dict::fromArray()` `array<string, mixed>` vs `array<mixed>` | `Dict.php` | Changed `@param` to `array<mixed>` (keys cast to string internally) |
+| `CURLOPT_URL` expects `non-empty-string` | `HttpClient.php` | Added `assert($url !== '')` in `configureCurl()` after URL already validated |
+| `CURLOPT_POSTFIELDS` raw string body | `HttpClient.php`, `phpstan.neon` | Added `ignoreErrors` entry (empty body is valid HTTP) |
+
+#### Makefile ✅
+Added two standalone CI targets that work without a running compose container:
+- **`make ci-test`** — runs PHPUnit via ephemeral `docker run --rm` with CI php.ini mounted
+- **`make ci-lint`** — runs PHPStan + CS-Fixer via ephemeral `docker run --rm` with CI php.ini mounted
+
+### Final State
+```
+PHPStan Level 9: [OK] No errors
+PHPUnit:         Tests: 208, Assertions: 271, Failures: 0
+                 (1 warning: no xdebug driver — expected; 11 PHPUnit API deprecations — cosmetic)
+```
+
+---
 
 ## What Was Added (AI-Agent Documentation Session — 2026-03-09)
 

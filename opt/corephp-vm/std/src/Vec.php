@@ -87,7 +87,7 @@ final class Vec extends TypedCollection
      */
     public static function filterValues(iterable $iterable, callable $predicate): array
     {
-        return PslVec\filter($iterable, $predicate);
+        return PslVec\filter($iterable, \Closure::fromCallable($predicate));
     }
 
     /**
@@ -103,12 +103,12 @@ final class Vec extends TypedCollection
      */
     public static function mapValues(iterable $iterable, callable $transform): array
     {
-        return PslVec\map($iterable, $transform);
+        return PslVec\map($iterable, \Closure::fromCallable($transform));
     }
 
     /**
      * Return the iterable sorted as a plain list using the given comparator.
-     * Backed by Psl\Vec\sort_by().
+     * Backed by Psl\Vec\sort().
      *
      * @template U
      * @param iterable<U>         $iterable
@@ -118,7 +118,7 @@ final class Vec extends TypedCollection
      */
     public static function sortedValues(iterable $iterable, callable $comparator): array
     {
-        return PslVec\sort_by($iterable, static fn($a) => $a, $comparator);
+        return PslVec\sort($iterable, \Closure::fromCallable($comparator));
     }
 
     /**

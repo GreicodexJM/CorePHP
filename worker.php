@@ -66,12 +66,12 @@ while (true) {
                 new Response(
                     500,
                     ['Content-Type' => 'application/json'],
-                    json_encode([
+                    s_enc([
                         'error'   => 'Internal Server Error',
                         'message' => getenv('APP_ENV') === 'development'
                             ? $e->getMessage()
                             : 'An unexpected error occurred.',
-                    ], JSON_THROW_ON_ERROR)
+                    ])
                 )
             );
         } catch (\Throwable $responseError) {
@@ -96,11 +96,11 @@ function handleRequest(\Psr\Http\Message\ServerRequestInterface $request): \Psr\
     return new Response(
         200,
         ['Content-Type' => 'application/json'],
-        json_encode([
+        s_enc([
             'runtime' => 'CorePHP PHP-JVM',
             'php'     => PHP_VERSION,
             'path'    => $request->getUri()->getPath(),
-        ], JSON_THROW_ON_ERROR)
+        ])
     );
 }
 

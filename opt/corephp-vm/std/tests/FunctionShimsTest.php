@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace core\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Psl\File\Exception\NotFoundException as FileNotFoundException;
 use Psl\File\Exception\RuntimeException as FileException;
-use Psl\Json\Exception as JsonException;
+use Psl\Json\Exception\DecodeException as JsonDecodeException;
+use Psl\Json\Exception\EncodeException as JsonEncodeException;
 use Psl\Type\Exception\CoercionException;
 
 /**
@@ -78,13 +80,13 @@ final class FunctionShimsTest extends TestCase
 
     public function testSJsonThrowsOnInvalidJson(): void
     {
-        $this->expectException(JsonException::class);
+        $this->expectException(JsonDecodeException::class);
         s_json('{not valid json}');
     }
 
     public function testSJsonThrowsOnEmptyString(): void
     {
-        $this->expectException(JsonException::class);
+        $this->expectException(JsonDecodeException::class);
         s_json('');
     }
 
@@ -106,7 +108,7 @@ final class FunctionShimsTest extends TestCase
 
     public function testSEncThrowsOnUnencodableValue(): void
     {
-        $this->expectException(JsonException::class);
+        $this->expectException(JsonEncodeException::class);
         s_enc(['value' => INF]);
     }
 
@@ -124,9 +126,11 @@ final class FunctionShimsTest extends TestCase
         self::assertSame(7, s_int(7));
     }
 
-    public function testSIntConvertsFloat(): void
+    public function testSIntConvertsWholeFloat(): void
     {
-        self::assertSame(3, s_int(3.9));
+        // PSL 4.x int()->coerce() only accepts whole floats (e.g. 3.0 → 3).
+        // Non-whole floats like 3.9 throw CoercionException.
+        self::assertSame(3, s_int(3.0));
     }
 
     public function testSIntThrowsOnNonNumericString(): void
@@ -229,7 +233,8 @@ final class FunctionShimsTest extends TestCase
 
     public function testSFileThrowsOnMissingFile(): void
     {
-        $this->expectException(FileException::class);
+        // PSL 4.x throws NotFoundException (extends InvalidArgumentException) for missing files.
+        $this->expectException(FileNotFoundException::class);
         s_file('/nonexistent/path/file.txt');
     }
 

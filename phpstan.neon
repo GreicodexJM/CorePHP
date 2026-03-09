@@ -17,10 +17,10 @@ parameters:
     # --------------------------------------------------------------------------
     # Strict mode settings
     # --------------------------------------------------------------------------
-    checkMissingIterableValueType:     true
-    checkGenericClassInNonGenericObjectType: true
+    # Note: checkMissingIterableValueType, checkGenericClassInNonGenericObjectType,
+    # and checkAlwaysTrueCheckTypeFunctionCall were removed in PHPStan 2.x
+    # (they are now always enabled at level 9 by default).
     checkFunctionArgumentTypes:        true
-    checkAlwaysTrueCheckTypeFunctionCall: true
 
     # --------------------------------------------------------------------------
     # Disallow mixed types — forces explicit typing everywhere
@@ -35,6 +35,12 @@ parameters:
     treatPhpDocTypesAsCertain:         true
 
     # --------------------------------------------------------------------------
+    # Parallelism — disabled so child workers don't hit php.ini disable_functions
+    # --------------------------------------------------------------------------
+    parallel:
+        maximumNumberOfProcesses:      1
+
+    # --------------------------------------------------------------------------
     # Ignored errors — runkit7 functions are not typed in PHPStan stubs
     # We suppress these specific false-positives from the FunctionOverrider
     # --------------------------------------------------------------------------
@@ -44,6 +50,9 @@ parameters:
           path:    opt/corephp-vm/std/src/Engine/FunctionOverrider.php
         - message: '#Call to an undefined function runkit7_function_redefine#'
           path:    opt/corephp-vm/std/src/Engine/FunctionOverrider.php
+        # curl_setopt CURLOPT_POSTFIELDS accepts raw string bodies (including empty) for valid HTTP semantics
+        - message: '#curl_setopt expects non-empty-string\|null, string given#'
+          path:    opt/corephp-vm/std/src/Net/Http/HttpClient.php
 
     # --------------------------------------------------------------------------
     # Bootstrap — autoloads the std library for analysis

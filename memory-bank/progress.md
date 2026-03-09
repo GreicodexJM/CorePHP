@@ -22,7 +22,7 @@
   - `src/functions.php` — 20 global shims (`s_json`, `s_enc`, `s_int`, `s_float`, `s_str`, `s_bool`, `s_file`, `s_write`, `s_append`, `s_fwrite`, `s_match`, `s_regex`, `s_regex_all`, `s_env`, `s_env_or`, `s_get`, `s_post`, `vec_filter`, `vec_map`, `dict_filter`, `dict_map`, `dict_merge`)
 - ✅ `core\Internal\Array\TypedCollection` (Pillar 1) — PSL-backed: filter, map, reverse, slice, chunk, sort, unique
 - ✅ `core\Net\Http\HttpClient + HttpResponse + HttpException` (Pillar 2)
-- ✅ **azjezz/psl ^2.9** (Pillar 3) — JSON, File, Type coercion, Regex, Vec, Dict, Env
+- ✅ **azjezz/psl ^4.2** (Pillar 3) — JSON, File, Type coercion, Regex, Vec, Dict, Env
 - ✅ `.php-cs-fixer.dist.php` (declare strict_types enforcement)
 - ✅ `phpstan.neon` (Level 9)
 - ✅ `ci/lint.sh` + `ci/test.sh`

@@ -76,7 +76,7 @@ if (!function_exists('s_json')) {
      *
      * @return mixed The decoded value
      *
-     * @throws \Psl\Json\Exception on invalid JSON or empty string
+     * @throws \Psl\Json\Exception\DecodeException on invalid JSON or empty string
      */
     function s_json(string $json, bool $associative = true): mixed
     {
@@ -94,7 +94,7 @@ if (!function_exists('s_enc')) {
      *
      * @return string The JSON-encoded string
      *
-     * @throws \Psl\Json\Exception if encoding fails
+     * @throws \Psl\Json\Exception\EncodeException if encoding fails
      */
     function s_enc(mixed $value, bool $pretty = false, int $flags = 0): string
     {
@@ -197,6 +197,9 @@ if (!function_exists('s_file')) {
      */
     function s_file(string $path, int $offset = 0, ?int $length = null): string
     {
+        assert($path !== '', 's_file: $path must not be empty.');
+        assert($offset >= 0, 's_file: $offset must be non-negative.');
+        assert($length === null || $length >= 1, 's_file: $length must be >= 1 or null.');
         return File\read($path, $offset, $length);
     }
 }
@@ -217,6 +220,7 @@ if (!function_exists('s_write')) {
      */
     function s_write(string $path, string $data, bool $append = false): int
     {
+        assert($path !== '', 's_write: $path must not be empty.');
         $mode = $append ? WriteMode::Append : WriteMode::OpenOrCreate;
         File\write($path, $data, $mode);
         return strlen($data);
@@ -237,6 +241,7 @@ if (!function_exists('s_append')) {
      */
     function s_append(string $path, string $data): int
     {
+        assert($path !== '', 's_append: $path must not be empty.');
         File\write($path, $data, WriteMode::Append);
         return strlen($data);
     }
@@ -324,7 +329,8 @@ if (!function_exists('s_regex_all')) {
      */
     function s_regex_all(string $pattern, string $subject): array
     {
-        return Regex\every_match($subject, $pattern);
+        // every_match() returns null when there are no matches; normalise to []
+        return Regex\every_match($subject, $pattern) ?? [];
     }
 }
 
@@ -345,6 +351,7 @@ if (!function_exists('s_env')) {
      */
     function s_env(string $key): string
     {
+        assert($key !== '', 's_env: $key must not be empty.');
         $value = Env\get_var($key);
         if ($value === null) {
             throw new \RuntimeException(
@@ -370,6 +377,7 @@ if (!function_exists('s_env_or')) {
      */
     function s_env_or(string $key, string $default): string
     {
+        assert($key !== '', 's_env_or: $key must not be empty.');
         return Env\get_var($key) ?? $default;
     }
 }
@@ -516,7 +524,7 @@ if (!function_exists('vec_filter')) {
      */
     function vec_filter(iterable $list, callable $predicate): array
     {
-        return Vec\filter($list, $predicate);
+        return Vec\filter($list, \Closure::fromCallable($predicate));
     }
 }
 
@@ -534,7 +542,7 @@ if (!function_exists('vec_map')) {
      */
     function vec_map(iterable $list, callable $transform): array
     {
-        return Vec\map($list, $transform);
+        return Vec\map($list, \Closure::fromCallable($transform));
     }
 }
 
@@ -551,7 +559,7 @@ if (!function_exists('dict_filter')) {
      */
     function dict_filter(array $dict, callable $predicate): array
     {
-        return Dict\filter($dict, $predicate);
+        return Dict\filter($dict, \Closure::fromCallable($predicate));
     }
 }
 
@@ -569,7 +577,7 @@ if (!function_exists('dict_map')) {
      */
     function dict_map(array $dict, callable $transform): array
     {
-        return Dict\map($dict, $transform);
+        return Dict\map($dict, \Closure::fromCallable($transform));
     }
 }
 

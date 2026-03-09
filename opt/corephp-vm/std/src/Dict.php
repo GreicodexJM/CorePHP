@@ -71,8 +71,8 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      *   Before: $config = ['host' => 'localhost', 'port' => '3306'];
      *   After:  $config = Dict::fromArray('string', ['host' => 'localhost', 'db' => 'app']);
      *
-     * @param string              $type Declared value type (FQCN or primitive)
-     * @param array<string, mixed> $data Associative PHP array
+     * @param string         $type Declared value type (FQCN or primitive)
+     * @param array<mixed>   $data Associative PHP array (non-string keys are cast to string)
      *
      * @return static<V>
      *
@@ -310,7 +310,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function offsetExists(mixed $offset): bool
     {
-        return isset($this->data[$offset]);
+        return array_key_exists((string) $offset, $this->data);
     }
 
     /** @return V */
@@ -421,7 +421,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      */
     public static function filterArray(array $data, callable $predicate): array
     {
-        return PslDict\filter($data, $predicate);
+        return PslDict\filter($data, \Closure::fromCallable($predicate));
     }
 
     /**
@@ -437,7 +437,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      */
     public static function filterKeys(array $data, callable $predicate): array
     {
-        return PslDict\filter_keys($data, $predicate);
+        return PslDict\filter_keys($data, \Closure::fromCallable($predicate));
     }
 
     /**
@@ -454,7 +454,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      */
     public static function mapArray(array $data, callable $transform): array
     {
-        return PslDict\map($data, $transform);
+        return PslDict\map($data, \Closure::fromCallable($transform));
     }
 
     /**
@@ -475,7 +475,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
 
     /**
      * Sort a plain associative array by value using a comparator, preserving keys.
-     * Backed by Psl\Dict\sort_by().
+     * Backed by Psl\Dict\sort().
      *
      * @template Tk of array-key
      * @template Tv
@@ -486,7 +486,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      */
     public static function sortArray(array $data, callable $comparator): array
     {
-        return PslDict\sort_by($data, static fn($v) => $v, $comparator);
+        return PslDict\sort($data, \Closure::fromCallable($comparator));
     }
 
     /**

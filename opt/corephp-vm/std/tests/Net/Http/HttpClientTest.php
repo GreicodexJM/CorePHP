@@ -61,6 +61,28 @@ final class HttpClientTest extends TestCase
         (new HttpClient())->post('');
     }
 
+    public function testPatchThrowsOnEmptyUrl(): void
+    {
+        $this->expectException(HttpException::class);
+        (new HttpClient())->patch('');
+    }
+
+    // =========================================================================
+    // defaultHeaders constructor — no network needed
+    // =========================================================================
+
+    public function testConstructorAcceptsDefaultHeaders(): void
+    {
+        $client = new HttpClient(defaultHeaders: ['Authorization' => 'Bearer token123']);
+        self::assertInstanceOf(HttpClient::class, $client);
+    }
+
+    public function testConstructorAcceptsEmptyDefaultHeaders(): void
+    {
+        $client = new HttpClient(defaultHeaders: []);
+        self::assertInstanceOf(HttpClient::class, $client);
+    }
+
     // =========================================================================
     // HttpResponse — unit tests (no network)
     //
@@ -147,7 +169,8 @@ final class HttpClientTest extends TestCase
 
     public function testJsonThrowsOnInvalidBody(): void
     {
-        $this->expectException(\core\Security\Safe\JsonDecodeException::class);
+        // PSL 4.x uses Psl\Json\Exception\DecodeException (not Psl\Json\Exception)
+        $this->expectException(\Psl\Json\Exception\DecodeException::class);
         $this->makeResponse(200, 'not json')->json(true);
     }
 

@@ -37,6 +37,7 @@ use Psl\Vec;
  * @template T
  * @implements \ArrayAccess<int, T>
  * @implements \Iterator<int, T>
+ * @phpstan-consistent-constructor
  */
 class TypedCollection implements \ArrayAccess, \Iterator, \Countable
 {
@@ -103,6 +104,7 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      */
     public static function fromArray(string $type, array $items): static
     {
+        /** @var static<T> $collection */
         $collection = new static($type);
         foreach ($items as $item) {
             $collection->add($item);
@@ -125,6 +127,7 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      */
     public static function fromIterable(string $type, iterable $items): static
     {
+        /** @var static<T> $collection */
         $collection = new static($type);
         foreach ($items as $item) {
             $collection->add($item);
@@ -172,6 +175,7 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
                 )
             );
         }
+        /** @var static<T> $merged */
         $merged = new static($this->type);
         foreach ($this->items as $item) {
             $merged->add($item);
@@ -314,8 +318,9 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      */
     public function filter(callable $predicate): static
     {
+        /** @var static<T> $filtered */
         $filtered = new static($this->type);
-        foreach (Vec\filter($this->items, $predicate) as $item) {
+        foreach (Vec\filter($this->items, \Closure::fromCallable($predicate)) as $item) {
             $filtered->add($item);
         }
         return $filtered;
@@ -333,8 +338,9 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      */
     public function map(callable $transform, string $outputType): static
     {
+        /** @var static<U> $mapped */
         $mapped = new static($outputType);
-        foreach (Vec\map($this->items, $transform) as $item) {
+        foreach (Vec\map($this->items, \Closure::fromCallable($transform)) as $item) {
             $mapped->add($item);
         }
         return $mapped;
@@ -392,6 +398,8 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      */
     public function slice(int $offset, ?int $length = null): static
     {
+        assert($offset >= 0, 'TypedCollection::slice(): $offset must be non-negative.');
+        assert($length === null || $length >= 0, 'TypedCollection::slice(): $length must be non-negative or null.');
         return static::fromArray($this->type, Vec\slice($this->items, $offset, $length));
     }
 
@@ -400,13 +408,13 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      * Each chunk is a new TypedCollection of the same declared type.
      * Backed by Psl\Vec\chunk().
      *
-     * @param positive-int $size Maximum items per chunk
+     * @param int $size Maximum items per chunk (must be >= 1)
      *
      * @return list<static<T>>
      */
     public function chunk(int $size): array
     {
-        if ($size <= 0) {
+        if ($size < 1) {
             throw new \InvalidArgumentException(
                 sprintf('TypedCollection::chunk() — $size must be a positive integer, got %d.', $size)
             );
@@ -421,7 +429,7 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
 
     /**
      * Return a new TypedCollection sorted by a comparator.
-     * Backed by Psl\Vec\sort_by().
+     * Backed by Psl\Vec\sort().
      *
      * @param callable(T, T): int $comparator
      *
@@ -429,7 +437,7 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      */
     public function sort(callable $comparator): static
     {
-        return static::fromArray($this->type, Vec\sort_by($this->items, static fn($a) => $a, $comparator));
+        return static::fromArray($this->type, Vec\sort($this->items, \Closure::fromCallable($comparator)));
     }
 
     /**
@@ -441,6 +449,7 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
     public function unique(): static
     {
         $seen    = [];
+        /** @var static<T> $unique */
         $unique  = new static($this->type);
         foreach ($this->items as $item) {
             $key = is_object($item) ? spl_object_id($item) : serialize($item);

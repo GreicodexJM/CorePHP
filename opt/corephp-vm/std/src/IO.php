@@ -41,6 +41,9 @@ final class IO
      */
     public static function read(string $path, int $offset = 0, ?int $length = null): string
     {
+        assert($path !== '', 'IO::read(): $path must not be empty.');
+        assert($offset >= 0, 'IO::read(): $offset must be non-negative.');
+        assert($length === null || $length >= 1, 'IO::read(): $length must be >= 1 or null.');
         return File\read($path, $offset, $length);
     }
 
@@ -60,6 +63,7 @@ final class IO
      */
     public static function write(string $path, string $data, bool $append = false): int
     {
+        assert($path !== '', 'IO::write(): $path must not be empty.');
         $mode = $append ? WriteMode::Append : WriteMode::OpenOrCreate;
         File\write($path, $data, $mode);
         return strlen($data);
@@ -77,6 +81,7 @@ final class IO
      */
     public static function append(string $path, string $data): int
     {
+        assert($path !== '', 'IO::append(): $path must not be empty.');
         File\write($path, $data, WriteMode::Append);
         return strlen($data);
     }
@@ -89,11 +94,12 @@ final class IO
      *
      * @return mixed The decoded JSON value
      *
-     * @throws \Psl\File\Exception\RuntimeException if file cannot be read
-     * @throws \Psl\Json\Exception                  if file content is not valid JSON
+     * @throws \Psl\File\Exception\NotFoundException  if file does not exist
+     * @throws \Psl\Json\Exception\DecodeException    if file content is not valid JSON
      */
     public static function json(string $path, bool $associative = true): mixed
     {
+        assert($path !== '', 'IO::json(): $path must not be empty.');
         $contents = File\read($path);
         return Json\decode($contents, $associative);
     }
@@ -107,11 +113,12 @@ final class IO
      *
      * @return int Bytes written (strlen of encoded JSON)
      *
-     * @throws \Psl\Json\Exception                  if data cannot be encoded
-     * @throws \Psl\File\Exception\RuntimeException if write fails
+     * @throws \Psl\Json\Exception\EncodeException     if data cannot be encoded
+     * @throws \Psl\File\Exception\RuntimeException    if write fails
      */
     public static function writeJson(string $path, mixed $data, bool $pretty = true): int
     {
+        assert($path !== '', 'IO::writeJson(): $path must not be empty.');
         $json = Json\encode($data, $pretty);
         File\write($path, $json, WriteMode::OpenOrCreate);
         return strlen($json);

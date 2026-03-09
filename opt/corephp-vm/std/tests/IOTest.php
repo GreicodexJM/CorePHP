@@ -6,8 +6,9 @@ namespace core\Tests;
 
 use PHPUnit\Framework\TestCase;
 use core\IO;
+use Psl\File\Exception\NotFoundException as FileNotFoundException;
 use Psl\File\Exception\RuntimeException as FileException;
-use Psl\Json\Exception as JsonException;
+use Psl\Json\Exception\DecodeException as JsonDecodeException;
 
 /**
  * @covers \core\IO
@@ -46,7 +47,8 @@ final class IOTest extends TestCase
 
     public function testReadThrowsOnMissingFile(): void
     {
-        $this->expectException(FileException::class);
+        // PSL 4.x throws NotFoundException (extends InvalidArgumentException) for missing files.
+        $this->expectException(FileNotFoundException::class);
         IO::read('/no/such/file.txt');
     }
 
@@ -106,14 +108,15 @@ final class IOTest extends TestCase
 
     public function testJsonThrowsOnMissingFile(): void
     {
-        $this->expectException(FileException::class);
+        // PSL 4.x throws NotFoundException (extends InvalidArgumentException) for missing files.
+        $this->expectException(FileNotFoundException::class);
         IO::json('/no/such/file.json');
     }
 
     public function testJsonThrowsOnInvalidJson(): void
     {
         file_put_contents($this->tmpJsonFile, 'not valid json');
-        $this->expectException(JsonException::class);
+        $this->expectException(JsonDecodeException::class);
         IO::json($this->tmpJsonFile);
     }
 
