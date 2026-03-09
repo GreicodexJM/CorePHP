@@ -8,7 +8,7 @@ IMAGE_TAG   := latest
 CONTAINER   := corephp-vm-app
 COMPOSE     := docker compose
 
-.PHONY: help build up down restart shell test lint lint-fix rr-start logs clean
+.PHONY: help build up down restart shell check test lint lint-fix rr-start logs clean
 
 # Default target
 help: ## Show available targets
@@ -47,6 +47,12 @@ shell: ## Open a bash shell in the running container
 # ---------------------------------------------------------------------------
 # Quality gates (run inside container)
 # ---------------------------------------------------------------------------
+
+check: ## Run tests + lint in sequence (full quality gate before committing)
+	@echo "→ Running full quality gate..."
+	$(COMPOSE) exec app sh /app/ci/test.sh
+	$(COMPOSE) exec app sh /app/ci/lint.sh
+	@echo "✓ All checks passed"
 
 lint: ## Run PHP-CS-Fixer (dry-run) + PHPStan Level 9
 	$(COMPOSE) exec app sh /app/ci/lint.sh

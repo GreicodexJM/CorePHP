@@ -108,26 +108,25 @@ if (extension_loaded('runkit7') && class_exists(\core\Engine\FunctionOverrider::
 //      core\Dict                   → Dict   (already short; exposes to global ns)
 //      core\Any                    → BaseObject
 //      core\StrictObject           → StrictObject (global alias)
-//      core\Security\Safe\Safe     → Safe
 //      core\IO                     → IO (exposes to global ns)
+//
+//    Note: core\Security\Safe\Safe was deleted — alias removed.
+//          Use s_*() shims or azjezz/psl directly.
 // ---------------------------------------------------------------------------
 if (class_exists(\core\Vec::class)) {
-    class_alias(\core\Vec::class,                    'ArrayList');
+    class_alias(\core\Vec::class,          'ArrayList');
 }
 if (class_exists(\core\Dict::class)) {
-    class_alias(\core\Dict::class,                   'Dict');
+    class_alias(\core\Dict::class,         'Dict');
 }
 if (class_exists(\core\Any::class)) {
-    class_alias(\core\Any::class,                    'BaseObject');
+    class_alias(\core\Any::class,          'BaseObject');
 }
 if (class_exists(\core\StrictObject::class)) {
-    class_alias(\core\StrictObject::class,           'StrictObject');
-}
-if (class_exists(\core\Security\Safe\Safe::class)) {
-    class_alias(\core\Security\Safe\Safe::class,     'Safe');
+    class_alias(\core\StrictObject::class, 'StrictObject');
 }
 if (class_exists(\core\IO::class)) {
-    class_alias(\core\IO::class,                     'IO');
+    class_alias(\core\IO::class,           'IO');
 }
 
 // ---------------------------------------------------------------------------

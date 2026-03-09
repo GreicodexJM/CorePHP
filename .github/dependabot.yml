@@ -1,0 +1,55 @@
+version: 2
+updates:
+  # Root project Composer dependencies (spiral, nyholm, monolog, etc.)
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "php"
+    ignore:
+      # PSL upgrade to ^5.0 is blocked — php-standard-library/phpstan-extension
+      # does not yet support azjezz/psl >= 5.0. Do NOT remove this ignore rule
+      # until a compatible phpstan-extension version is published.
+      # See: https://packagist.org/packages/php-standard-library/phpstan-extension
+      - dependency-name: "azjezz/psl"
+        versions: [">=5.0"]
+
+  # std library Composer dependencies (azjezz/psl, phpstan, phpunit, etc.)
+  - package-ecosystem: "composer"
+    directory: "/opt/corephp-vm/std"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "php"
+      - "std"
+    ignore:
+      # Same PSL blocker as above — extension incompatible with psl >= 5.0
+      - dependency-name: "azjezz/psl"
+        versions: [">=5.0"]
+
+  # Docker base image (PHP Alpine)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"
