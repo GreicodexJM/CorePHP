@@ -5,7 +5,12 @@ nav_order: 1
 ---
 
 <p align="center">
-  <img src="assets/images/corephp-logo.png" alt="CorePHP Logo" width="200" />
+  <a href="https://github.com/GreicodexJM">
+    <img src="greicodex-logo.png" alt="Greicodex" width="150" />
+  </a>
+</p>
+<p align="center">
+  <img src="corephp-logo.png" alt="CorePHP Logo" width="200" />
 </p>
 
 # CorePHP
