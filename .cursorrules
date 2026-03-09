@@ -1,0 +1,134 @@
+# CorePHP — Cursor IDE Rules
+# Applied to all completions and Composer interactions in this workspace.
+
+## Project Identity
+CorePHP is a PHP 8.4 base Docker image ("PHP-JVM") providing:
+- Persistent process model via RoadRunner
+- Type-safe `std` library under `core\` namespace
+- Engine-level safety via runkit7 + php.ini hardening
+- Zero silent failures — every error is a typed exception
+
+## Commands
+```bash
+make build      # Build Docker image
+make up         # Start services
+make test       # PHPUnit (inside Docker)
+make lint       # PHPStan Level 9 + PHP-CS-Fixer (inside Docker)
+make lint-fix   # Auto-fix style violations
+make shell      # Enter container
+```
+
+## Namespace Tree — All Core Classes
+```
+core\Any                                 — Universal strict base class
+core\StrictObject                        — Undefined property guard (abstract)
+core\Vec                                 — Typed sequential list
+core\Dict                                — Typed key-value store
+core\IO                                  — Safe file + HTTP facade
+core\Engine\FunctionOverrider            — runkit7 override installer
+core\Internal\Array\TypedCollection      — Base type-safe collection
+core\Net\Http\HttpClient                 — curl wrapper (throws on failure)
+core\Net\Http\HttpResponse               — Immutable response value object
+core\Net\Http\HttpException              — HTTP + transport failures
+core\Security\Exceptions\SecurityException
+core\Security\Exceptions\EncodingException
+```
+
+## Exception Types
+```
+\RuntimeException
+  └── core\Net\Http\HttpException
+  └── core\Security\Exceptions\SecurityException
+  └── core\Security\Exceptions\EncodingException
+
+PSL (azjezz/psl ^4.2):
+  Psl\Json\Exception                       — JSON decode/encode
+  Psl\File\Exception\RuntimeException      — File read/write
+  Psl\Type\Exception\CoercionException     — Type coercion
+  Psl\Regex\Exception\RuntimeException     — Regex failures
+```
+
+## Global Shim Functions (available everywhere — no `use` needed)
+```php
+// JSON
+s_json(string $json, bool $assoc = true): mixed
+s_enc(mixed $val, bool $pretty = false): string
+
+// Type coercion
+s_int(mixed $val): int
+s_float(mixed $val): float
+s_str(mixed $val): string
+s_bool(mixed $val): bool
+
+// File I/O
+s_file(string $path): string
+s_write(string $path, string $data, bool $append = false): int
+s_append(string $path, string $data): int
+s_fwrite(resource $handle, string $data): int
+
+// Regex
+s_match(string $pattern, string $subject): bool
+s_regex(string $pattern, string $subject): ?array
+s_regex_all(string $pattern, string $subject): array
+
+// Environment
+s_env(string $key): string
+s_env_or(string $key, string $default): string
+
+// HTTP
+s_get(string $url, array $headers = []): core\Net\Http\HttpResponse
+s_post(string $url, array|string $body = [], array $headers = []): core\Net\Http\HttpResponse
+
+// Array ↔ Collection bridge
+arr_to_list(string $type, array $items): core\Vec
+list_to_arr(core\Internal\Array\TypedCollection $list): array
+arr_to_dict(string $type, array $data): core\Dict
+dict_to_arr(core\Dict $dict): array
+
+// Functional
+vec_filter(iterable $list, callable $fn): array
+vec_map(iterable $list, callable $fn): array
+dict_filter(array $dict, callable $fn): array
+dict_map(array $dict, callable $fn): array
+dict_merge(array ...$dicts): array
+```
+
+## Hard Rules — Always Apply in Completions
+
+### MUST
+- Add `declare(strict_types=1);` as the first line of every PHP file
+- Use `core\*` namespace for all new classes
+- Declare explicit return types on all public methods
+- Use `core\Vec` / `core\Dict` instead of `array` in public method signatures
+- Throw typed, named exceptions — never return `false` / `null` / `0` as errors
+- Write PHPUnit test before implementation code (TDD)
+
+### MUST NOT
+- Use `mixed` in any public method signature
+- Use bare `array` type in public interfaces
+- Silence exceptions with empty catch blocks
+- Call `json_decode()` / `json_encode()` directly — use `s_json()` / `s_enc()`
+- Call `file_get_contents()` / `file_put_contents()` — use `s_file()` / `s_write()`
+- Call `intval()` / `floatval()` — use `s_int()` / `s_float()`
+- Reference `core\Security\Safe\Safe` — **this class was deleted**
+- Upgrade `azjezz/psl` past `^4.2` — phpstan extension is incompatible with PSL 5.x
+- Use `unserialize()`, `exec()`, `shell_exec()`, `system()`, `eval()`
+
+## File Layout
+```
+opt/corephp-vm/std/src/      — std library source (core\ namespace)
+opt/corephp-vm/std/tests/    — PHPUnit tests (mirrors src/ structure)
+opt/corephp-vm/bootstrap.php — auto_prepend_file sandbox
+config/php.ini               — hardened PHP config
+Makefile                     — all developer tasks
+ci/lint.sh                   — PHPStan + PHP-CS-Fixer runner
+ci/test.sh                   — PHPUnit runner
+memory-bank/                 — GOS project documentation
+docs/std/                    — std library API docs
+```
+
+## Gotchas
+- `TypedCollection` is NOT `final` — `Vec` extends it
+- `HttpResponse::header()` returns `?string` (null if absent); use `requireHeader()` to throw
+- `FunctionOverrider::install()` is idempotent — safe to call multiple times
+- `bootstrap.php` has a `PHP_JVM_BOOTSTRAP_LOADED` guard against double-loading

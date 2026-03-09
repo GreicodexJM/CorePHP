@@ -1,0 +1,101 @@
+# .clinerules — CorePHP Project-Specific Rules
+# These rules extend the global GOS rules in ~/.cline/rules/
+# and apply specifically to this CorePHP repository.
+
+---
+
+## 1. Read These Files First (Every Session)
+
+Before writing any code, read ALL of these files in order:
+
+1. `CLAUDE.md` — Quick-start constraints and API reference
+2. `memory-bank/activeContext.md` — Current work state and recent decisions
+3. `memory-bank/progress.md` — What's built, what's broken, what's next
+
+Do NOT skip this step. The memory bank is the only persistent context across sessions.
+
+---
+
+## 2. CorePHP-Specific Coding Rules
+
+### The `Safe` Class Was Deleted
+`core\Security\Safe\Safe` **no longer exists**. Do not:
+- Reference it
+- Import it with `use`
+- Suggest using it in code examples
+
+Instead use PSL directly:
+- `Psl\Json\decode()` / `Psl\Json\encode()` — or the `s_json()` / `s_enc()` shims
+- `Psl\File\read()` / `Psl\File\write()` — or the `s_file()` / `s_write()` shims
+- `Psl\Type\int()->coerce()` — or `s_int()`
+- `Psl\Regex\matches()` — or `s_match()`
+
+### PSL Version Is Locked
+**Never suggest upgrading `azjezz/psl` to `^5.0` or higher.** This breaks PHPStan Level 9 because `php-standard-library/phpstan-extension ^2.0` conflicts with PSL >= 5.0.
+
+### Namespace Rule
+Every new class must live under `core\*`. File path must match namespace:
+- `core\MyClass` → `opt/corephp-vm/std/src/MyClass.php`
+- `core\Net\Http\MyClient` → `opt/corephp-vm/std/src/Net/Http/MyClient.php`
+
+### No Native PHP Failures
+Never write code that:
+- Calls `json_decode()` / `json_encode()` directly (use `s_json()` / `s_enc()`)
+- Calls `file_get_contents()` / `file_put_contents()` directly (use `s_file()` / `s_write()`)
+- Calls `intval()` / `floatval()` directly (use `s_int()` / `s_float()`)
+- Returns `false` or `null` as an error signal (throw a typed exception instead)
+
+---
+
+## 3. Test File Conventions
+
+- Test files live in `opt/corephp-vm/std/tests/` mirroring `src/` structure
+- Test class names: `{ClassName}Test` extending `PHPUnit\Framework\TestCase`
+- Every public method on a class must have at least one test
+- When adding new global shim functions to `functions.php`, add tests to `FunctionShimsTest.php`
+- When adding new `TypedCollection` methods, add tests to `TypedCollectionTest.php`
+
+---
+
+## 4. Makefile Is the Interface
+
+Always use `make` commands, never raw Docker or PHP commands:
+
+```bash
+make test       # Run tests
+make lint       # Run static analysis
+make lint-fix   # Fix code style
+make shell      # Enter container
+make build      # Rebuild image
+```
+
+If you need a new repetitive task, **add it to the Makefile** rather than documenting a raw command.
+
+---
+
+## 5. Before Completing Any Task
+
+Run this verification sequence (inside Docker via `make`):
+1. `make test` → all tests must pass (0 failures)
+2. `make lint` → PHPStan Level 9 must pass (0 errors)
+
+If either fails, fix the issue before marking the task done.
+
+---
+
+## 6. Documentation Update Rule
+
+After ANY code change:
+- Update `memory-bank/activeContext.md` immediately — do not leave it as a "final step"
+- If adding a new class to `std/src/`, add it to `docs/std/README.md` namespace tree
+- If adding a new global shim, add it to `docs/std/functions.md`
+
+---
+
+## 7. Known Gotchas
+
+- **`TypedCollection` is NOT `final`** — `Vec` extends it. Do not add `final` back.
+- **`HttpResponse::header()`** returns `?string` (null if header absent). Use `requireHeader()` if you want it to throw.
+- **`FunctionOverrider::install()`** is idempotent — safe to call multiple times; it checks before re-defining.
+- **`bootstrap.php`** uses `defined('PHP_JVM_BOOTSTRAP_LOADED')` guard to prevent double-execution in RoadRunner workers.
+- **`auto_prepend_file=""`** is set in the Dockerfile during `composer install` steps to prevent bootstrap from running before vendor is available.

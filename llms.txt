@@ -1,0 +1,152 @@
+# CorePHP — LLM Project Overview
+
+> This file is designed to be read by LLMs and AI coding agents as a **quick-start orientation** for the CorePHP codebase. Read this first, then consult `CLAUDE.md` for full agent instructions.
+
+---
+
+## What Is CorePHP?
+
+CorePHP is a **production-grade PHP 8.4 base Docker image** that gives PHP the stability model of the JVM:
+
+1. **Persistent process** — PHP runs inside [RoadRunner](https://roadrunner.dev/) as a long-lived process (no cold-start overhead)
+2. **Zero silent failures** — every PHP stdlib failure that normally returns `false`/`null`/`0` is replaced with a typed exception
+3. **Type-safe standard library** — the `core\` namespace provides typed collections, a curl HTTP client, and safe I/O primitives
+
+**Output artifact:** `greicodex/corephp-vm` Docker image, published to Docker Hub.  
+**Use case:** Downstream PHP projects use `FROM greicodex/corephp-vm:latest` as their base image.
+
+---
+
+## Key Concepts Glossary
+
+| Term | Meaning |
+|---|---|
+| **PHP-JVM** | Nickname for CorePHP — PHP running like a JVM (long-lived, typed, exception-based) |
+| **RoadRunner** | Go-based application server that keeps PHP alive across requests |
+| **FunctionOverrider** | PHP class that uses `runkit7` to redefine native PHP functions at boot-time |
+| **bootstrap.php** | Auto-prepend file that installs error handlers + FunctionOverrider before every request |
+| **PSL / `azjezz/psl`** | PHP Standard Library — provides safe JSON, File, Type coercion, Regex operations |
+| **TypedCollection** | Base class for `Vec`/`Dict` — enforces a single element type at runtime |
+| **Vec** | A typed sequential list (like Java's `ArrayList`) |
+| **Dict** | A typed key-value store (like Java's `HashMap`) |
+| **`s_*` shims** | Globally available shorthand functions (`s_json`, `s_int`, `s_file`, etc.) that wrap PSL |
+| **runkit7** | PHP extension enabling redefinition of built-in functions at runtime |
+| **Three Layers** | The three enforcement mechanisms: Static (PHPStan), Boot (runkit7), Runtime (error handler) |
+| **GOS** | Greicodex Operating System — the project/agent management methodology used here |
+| **Memory Bank** | The `memory-bank/` directory — persistent documentation read by AI agents each session |
+
+---
+
+## Three Enforcement Layers
+
+```
+Layer 1: STATIC  — PHPStan Level 9 + PHP-CS-Fixer (CI + pre-commit)
+Layer 2: BOOT    — runkit7 FunctionOverrider (runs once at process startup)
+Layer 3: RUNTIME — bootstrap.php error_handler (every request)
+```
+
+---
+
+## File Map — What Matters Where
+
+```
+CLAUDE.md                               ← Full agent instructions (read this)
+AGENTS.md                               ← OpenAI Codex agent instructions
+.clinerules                             ← Cline-specific project rules
+.cursorrules                            ← Cursor IDE rules
+llms.txt                                ← This file
+
+Dockerfile                              ← PHP 8.4 Alpine + RoadRunner + runkit7 build
+Makefile                                ← All developer commands (make test, make lint, etc.)
+.rr.yaml                                ← RoadRunner config (4 workers, 500 req/worker)
+worker.php                              ← PSR-7 request loop (persistent)
+config/php.ini                          ← Hardened PHP (disable_functions + runkit)
+opt/corephp-vm/bootstrap.php            ← auto_prepend_file (error handler + FunctionOverrider)
+
+opt/corephp-vm/std/src/                 ← std library SOURCE (core\ namespace)
+  Any.php                               ← core\Any — strict base class
+  StrictObject.php                      ← core\StrictObject — undefined property guard
+  Vec.php                               ← core\Vec — typed sequential list
+  Dict.php                              ← core\Dict — typed key-value store
+  IO.php                                ← core\IO — file + HTTP facade
+  functions.php                         ← 25 global s_* shim functions
+  Engine/FunctionOverrider.php          ← runkit7 native function replacements
+  Internal/Array/TypedCollection.php    ← base type-safe collection
+  Net/Http/HttpClient.php               ← curl HTTP client
+  Net/Http/HttpResponse.php             ← immutable response value object
+  Net/Http/HttpException.php            ← transport + status failures
+  Security/Exceptions/                  ← SecurityException, EncodingException
+
+opt/corephp-vm/std/tests/               ← PHPUnit tests (mirrors src/)
+ci/lint.sh                              ← lint runner (PHP-CS-Fixer + PHPStan)
+ci/test.sh                              ← test runner (PHPUnit)
+docs/std/                               ← std library documentation (7 markdown files)
+memory-bank/                            ← GOS persistent project documentation
+```
+
+---
+
+## Available APIs at a Glance
+
+### Global Shim Functions (no `use` needed)
+```php
+s_json($str)            // json_decode → throws on bad JSON
+s_enc($val)             // json_encode → throws on failure
+s_int($val)             // strict int coerce → throws on bad input
+s_float($val)           // strict float coerce
+s_str($val)             // strict string coerce
+s_bool($val)            // strict bool coerce
+s_file($path)           // file_get_contents → throws if file missing
+s_write($path, $data)   // file_put_contents → throws on failure
+s_append($path, $data)  // file append
+s_fwrite($handle, $data)// fwrite on handle → throws on false
+s_match($pat, $str)     // bool regex test
+s_regex($pat, $str)     // first match groups → null if no match
+s_regex_all($pat, $str) // all match groups
+s_env($key)             // getenv → throws if not set
+s_env_or($key, $def)    // getenv with default
+s_get($url)             // HTTP GET → HttpResponse
+s_post($url, $body)     // HTTP POST → HttpResponse
+arr_to_list($type, $arr)// array → core\Vec
+arr_to_dict($type, $arr)// array → core\Dict
+vec_filter($list, $fn)  // Psl\Vec\filter
+vec_map($list, $fn)     // Psl\Vec\map
+dict_filter($d, $fn)    // Psl\Dict\filter
+dict_map($d, $fn)       // Psl\Dict\map
+dict_merge(...$dicts)   // Psl\Dict\merge
+```
+
+### Core Classes
+```php
+new core\Vec('int')          // typed sequential list
+new core\Dict('string')      // typed key-value store
+core\IO::json($path)         // read + parse JSON file
+core\IO::get($url)           // HTTP GET
+new core\Net\Http\HttpClient(timeout: 10)  // curl client
+```
+
+---
+
+## Hard Constraints (Must Know)
+
+1. **Every PHP file** must start with `declare(strict_types=1);`
+2. **All classes** must be under the `core\*` namespace
+3. **No `mixed`** in public method signatures
+4. **No bare `array`** in public interfaces — use `Vec` or `Dict`
+5. **No `unserialize()`, `exec()`, `eval()`** — disabled/forbidden
+6. **PSL version is locked at `^4.2`** — do NOT upgrade to `^5.0` (phpstan extension conflict)
+7. **`core\Security\Safe\Safe` was deleted** — use PSL or `s_*` shims instead
+8. **TDD required** — write failing tests before implementation code
+
+---
+
+## Further Reading
+
+- `CLAUDE.md` — Full agent instructions, complete API reference, known issues
+- `AGENTS.md` — OpenAI Codex / Codex CLI format
+- `memory-bank/01_PROJECT_CHARTER.md` — Project vision and success criteria
+- `memory-bank/02_ARCHITECTURE_PRINCIPLES.md` — Hexagonal architecture + SOLID
+- `memory-bank/activeContext.md` — Current work focus and recent decisions
+- `docs/std/README.md` — std library reference overview
+- `docs/std/functions.md` — Global shim functions reference table
+- `README.md` — End-user documentation (Docker Hub, VPS mode, Shared Hosting mode)

@@ -1,9 +1,47 @@
 # Active Context: CorePHP (PHP-JVM)
 
 ## Current Work Focus
-✅ **PSL Integration complete — azjezz/psl replaces hand-rolled Safe class as Layer 2.**
+✅ **AI-Agent Documentation Layer complete — repo is now fully oriented for LLM/coding agents.**
 
 ## Status
+🟢 **COMPLETE** — All AI-agent instruction files created; memory bank updated.
+
+## What Was Added (AI-Agent Documentation Session — 2026-03-09)
+
+### AI-Friendly Artifacts ✅
+Six new files added to make the repository usable by any LLM coding agent without prior context:
+
+| File | Tool / Agent | Purpose |
+|---|---|---|
+| `CLAUDE.md` | Claude Code (Anthropic) | Full agent instructions: commands, architecture, all APIs, constraints, known issues |
+| `AGENTS.md` | OpenAI Codex CLI / Codex Agents | `commands:` + `constraints:` structured blocks for programmatic parsing |
+| `.clinerules` | Cline (local repo rules) | CorePHP-specific rules layered on top of global GOS rules |
+| `.cursorrules` | Cursor IDE | Namespace tree, shim functions, hard rules for inline completions |
+| `llms.txt` | Any LLM / generic | Scannable project overview: concepts glossary, file map, API summary, constraints |
+| `.github/copilot-instructions.md` | GitHub Copilot | Workspace instructions for Copilot Chat + inline suggestions |
+
+### Content Strategy
+- **Non-duplicative** — each file cross-references the others rather than repeating prose
+- **`CLAUDE.md`** is the canonical deep reference; others are summaries pointing to it
+- **`llms.txt`** serves as a quick-start orientation (< 200 lines) for any LLM dropped into the repo
+- **`.clinerules`** extends global GOS rules — adds CorePHP-specific gotchas and workflow enforcement
+
+### Key Content Captured in Agent Files
+- The "Safe class was deleted" anti-pattern (PSL replaces it)
+- The PSL `^4.2` version lock and why upgrading to `^5.0` is blocked
+- All 25 global `s_*` shim functions with signatures
+- Full `core\*` namespace tree
+- Exception hierarchy (custom + PSL)
+- `TypedCollection` is NOT `final` (Vec extends it)
+- `HttpResponse::header()` returns `?string`
+- `FunctionOverrider::install()` is idempotent
+- TDD requirement (tests before code)
+- `make test` + `make lint` must pass before any task is complete
+
+## Previous Work Focus (kept for history)
+✅ **PSL Integration complete — azjezz/psl replaces hand-rolled Safe class as Layer 2.**
+
+## Previous Status
 🟢 **COMPLETE** — PSL integrated as direct Layer 2, new shims added, tests updated.
 
 ## What Was Built
