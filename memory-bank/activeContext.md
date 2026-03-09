@@ -36,6 +36,15 @@ Three Safety Pillars:
 ## Known Open Issue
 - RoadRunner `WorkerAllocate: EOF` in `docker compose up` — `spiral/roadrunner-worker` missing from vendor. Run `make shell` then `composer install` to fix.
 
+## Last Session Update (2026-03-09 — Docs cleanup)
+
+### What Was Done
+- `README.md`: updated PHP badge 8.3 → 8.4; replaced stale "Pillar 3 — `core\Security\Safe`" section with accurate `s_*()` shims section; fixed file tree (removed non-existent Safe.php and 6 exception files)
+- `docs/index.md`: updated PHP badge 8.3 → 8.4; replaced `Safe::jsonDecode()` code example with `s_json()`/`s_int()`/`s_file()` equivalents; replaced broken `| core\Security\Safe\Safe |` table row with `| Global s_*() shims |`; removed duplicate functions row; fixed `corephp-logo.png` path (was `assets/images/corephp-logo.png` → `corephp-logo.png`)
+- `docs/_config.yml`: tagline updated PHP 8.3 → 8.4
+- `docs/corephp-logo.png`: compressed from 6.8 MB → 340 KB (ImageMagick resize 2816px → 800px + strip metadata)
+- Greicodex logos added: `greicodex-logo.png` (120K) and `fidex-as5-logo.png` (768K) from GreicodexJM/fidex-protocol
+
 ## Next Potential Tasks
 - Add PHP code coverage (install Xdebug or PCOV in the Docker image)
 - Add integration test suite for RoadRunner worker lifecycle

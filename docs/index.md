@@ -16,12 +16,12 @@ nav_order: 1
 # CorePHP
 {: .fs-9 }
 
-A production-grade, persistent PHP 8.3 runtime that brings JVM-like stability to PHP.
+A production-grade, persistent PHP 8.4 runtime that brings JVM-like stability to PHP.
 {: .fs-6 .fw-300 }
 
 [![Build & Push](https://github.com/GreicodexJM/CorePHP/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/GreicodexJM/CorePHP/actions/workflows/docker-publish.yml)
 [![Docker Hub](https://img.shields.io/docker/v/greicodex/corephp-vm?logo=docker&label=greicodex%2Fcorephp-vm)](https://hub.docker.com/r/greicodex/corephp-vm)
-[![PHP 8.3](https://img.shields.io/badge/PHP-8.3-blue?logo=php)](https://www.php.net/)
+[![PHP 8.4](https://img.shields.io/badge/PHP-8.4-blue?logo=php)](https://www.php.net/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/GreicodexJM/CorePHP/blob/main/LICENSE)
 
 [Get started →](#-quick-start){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
@@ -85,12 +85,10 @@ $data = json_decode($input);   // returns null on error, no exception
 $id   = intval("hello");       // silently returns 0
 $file = file_get_contents($p); // returns false on failure
 
-// ✅ CorePHP — typed exceptions everywhere
-use core\Security\Safe\Safe;
-
-$data = Safe::jsonDecode($input);  // throws JsonDecodeException
-$id   = Safe::toInt("hello");      // throws TypeCoercionException
-$file = Safe::fileRead($path);     // throws FileReadException
+// ✅ CorePHP — typed exceptions everywhere (no use statement needed)
+$data = s_json($input);   // throws Psl\Json\Exception\DecodeException
+$id   = s_int("hello");   // throws Psl\Type\Exception\CoercionException
+$file = s_file($path);    // throws Psl\File\Exception\RuntimeException
 ```
 
 ### 🏗️ Type-Safe Collections
@@ -140,10 +138,9 @@ Dangerous functions (`exec`, `shell_exec`, `unserialize`, `eval`-adjacent) are *
 |---|---|---|
 | `core\Vec` | Typed sequential list (ArrayList) | [Vec →](std/Vec) |
 | `core\Dict` | Typed key-value map | [Dict →](std/Dict) |
-| `core\Security\Safe\Safe` | Safe wrappers for built-ins | [Safe →](std/Safe) |
+| Global `s_*()` shims | PSL-backed: json, int, file, regex, env, http | [Functions →](std/functions) |
 | `core\IO` | File + HTTP facade | [IO →](std/IO) |
 | `core\StrictObject` | No dynamic properties | [StrictObject →](std/StrictObject) |
-| Global functions | `s_json`, `s_int`, `s_file`... | [Functions →](std/functions) |
 | Migration guide | PHP arrays → CorePHP | [Migration →](std/migration) |
 
 ---

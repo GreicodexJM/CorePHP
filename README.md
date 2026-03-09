@@ -12,10 +12,10 @@
 [![Build & Push](https://github.com/GreicodexJM/CorePHP/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/GreicodexJM/CorePHP/actions/workflows/docker-publish.yml)
 [![Docs](https://github.com/GreicodexJM/CorePHP/actions/workflows/pages.yml/badge.svg)](https://greicodexjm.github.io/CorePHP/)
 [![Docker Hub](https://img.shields.io/docker/v/greicodex/corephp-vm?logo=docker&label=greicodex%2Fcorephp-vm)](https://hub.docker.com/r/greicodex/corephp-vm)
-[![PHP 8.3](https://img.shields.io/badge/PHP-8.3-blue?logo=php)](https://www.php.net/)
+[![PHP 8.4](https://img.shields.io/badge/PHP-8.4-blue?logo=php)](https://www.php.net/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> **A production-grade, persistent PHP 8.3 runtime that brings JVM-like stability to PHP.**
+> **A production-grade, persistent PHP 8.4 runtime that brings JVM-like stability to PHP.**
 
 PHP traditionally re-initializes on every request. CorePHP eliminates this by running PHP inside **RoadRunner** as a long-lived process — just like the JVM. It also replaces PHP's silent-failure standard library with one that throws typed exceptions on every error.
 
@@ -120,7 +120,7 @@ If you cannot use Docker (shared hosting, cPanel, Plesk), you can use a subset o
 | runkit7 overrides | ✅ | ❌ (extension not available) |
 | bootstrap.php sandbox | ✅ | ✅ |
 | StrictObject | ✅ | ✅ |
-| Safe static class | ✅ | ✅ |
+| Global `s_*()` shims | ✅ | ✅ |
 | Session hardening | ✅ | ✅ |
 | Error → Exception | ✅ | ✅ |
 
@@ -180,34 +180,39 @@ try {
 }
 ```
 
-### Pillar 3 — `core\Security\Safe`
+### Pillar 3 — Global `s_*()` Function Shims (azjezz/psl)
 
-Safe replacements for PHP's silent-failure functions:
+Backed by [azjezz/psl](https://github.com/azjezz/psl), these global shim functions replace PHP's
+silent-failure built-ins. No `use` statement required — they are always available:
 
 ```php
-use core\Security\Safe\Safe;
-use core\Security\Safe\JsonDecodeException;
-use core\Security\Safe\TypeCoercionException;
-use core\Security\Safe\FileReadException;
+// JSON — throws Psl\Json\Exception\DecodeException / EncodeException
+$data = s_json('{"key":"value"}');        // array
+$json = s_enc(['key' => 'value']);        // string
+$json = s_enc(['key' => 'value'], true);  // pretty-printed string
 
-// json_decode — throws JsonDecodeException instead of returning null
-$data = Safe::jsonDecode('{"key":"value"}');
-$data = Safe::jsonDecode('{invalid}'); // throws JsonDecodeException
+// Type coercion — throws Psl\Type\Exception\CoercionException
+$id  = s_int('42');         // 42     (not silent 0)
+$id  = s_int('hello');      // throws CoercionException
+$n   = s_float('3.14');     // 3.14
+$str = s_str(42);           // "42"
 
-// json_encode — throws JsonEncodeException instead of returning false
-$json = Safe::jsonEncode(['key' => 'value']);
+// File I/O — throws Psl\File\Exception\RuntimeException
+$contents = s_file('/etc/hostname');              // string
+$bytes    = s_write('/tmp/out.txt', 'hello');     // int (bytes written)
+$bytes    = s_append('/tmp/out.txt', ' world');   // int
 
-// Type coercion — strict, no silent 0
-$id = Safe::toInt('42');        // returns 42
-$id = Safe::toInt('hello');     // throws TypeCoercionException
-$n  = Safe::toFloat('3.14');    // returns 3.14
+// Regex — throws Psl\Regex\Exception\RuntimeException
+s_match('/^\d+$/', '123');            // true / false
+s_regex('/(\d+)-(\d+)/', '10-99');   // ['10', '99'] or null
 
-// File reading — throws FileReadException instead of returning false
-$contents = Safe::fileRead('/etc/hostname');
-$contents = Safe::fileRead('/nonexistent'); // throws FileReadException
+// Environment — throws RuntimeException if missing
+s_env('APP_KEY');                     // string or throws
+s_env_or('APP_ENV', 'production');   // string with fallback
 
-// File writing — throws FileWriteException instead of returning false
-$bytes = Safe::fileWrite('/tmp/output.txt', 'hello');
+// HTTP (returns core\Net\Http\HttpResponse — throws HttpException on failure)
+$r = s_get('https://api.example.com/users');
+$r = s_post('https://api.example.com', ['name' => 'Alice']);
 ```
 
 ---
@@ -302,18 +307,9 @@ CorePHP/
 │           │   ├── HttpClient.php         # Pillar 2
 │           │   ├── HttpResponse.php
 │           │   └── HttpException.php
-│           └── Security/
-│               ├── Safe/
-│               │   ├── Safe.php           # Pillar 3
-│               │   ├── JsonDecodeException.php
-│               │   ├── JsonEncodeException.php
-│               │   ├── TypeCoercionException.php
-│               │   ├── FileReadException.php
-│               │   ├── FileWriteException.php
-│               │   └── RegexException.php
-│               └── Exceptions/
-│                   ├── SecurityException.php
-│                   └── EncodingException.php
+│           └── Security/Exceptions/
+│               ├── SecurityException.php    # unserialize guard
+│               └── EncodingException.php    # base64_decode guard
 ├── ci/
 │   ├── lint.sh                         # CI lint runner
 │   └── test.sh                         # CI test runner

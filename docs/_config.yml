@@ -5,7 +5,7 @@
 # =============================================================================
 
 title: CorePHP
-tagline: Production-grade persistent PHP 8.3 runtime
+tagline: Production-grade persistent PHP 8.4 runtime
 description: >
   CorePHP eliminates PHP's per-request restart overhead by running inside
   RoadRunner as a long-lived process. It replaces PHP's silent-failure
