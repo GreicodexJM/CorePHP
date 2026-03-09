@@ -94,6 +94,43 @@ Required GitHub Secrets:
 - `DOCKERHUB_USERNAME` = `greicodex`
 - `DOCKERHUB_TOKEN` = Docker Hub access token (Account Settings → Security)
 
+## What Was Fixed (2026-03-09 — Improvement & Cleanup Session)
+
+### Security Fixes ✅
+- **`config/php.ini` — stale `auto_prepend_file` path fixed**
+  - Was: `auto_prepend_file = /opt/php-jvm/bootstrap.php` (file doesn't exist at that path)
+  - Now: `auto_prepend_file = /opt/corephp-vm/bootstrap.php` (correct path)
+  - Impact: bootstrap sandbox (error handler, FunctionOverrider, class aliases) now actually runs in production
+- **`config/php.ini` — broken multiline `disable_functions` fixed**
+  - PHP ini parser does NOT support multi-line values without backslash continuation
+  - Only `unserialize,` was being applied before — 33 other dangerous functions were NOT disabled
+  - Consolidated to a single line: all 34 functions now correctly disabled at engine level
+
+### Runtime Bug Fix ✅
+- **`FunctionOverrider.php` — `\Psl\Json\Exception` is not instantiable in PSL 4.x**
+  - The json_decode and json_encode override bodies wrapped in try-catch that threw `new \Psl\Json\Exception(...)`
+  - In PSL 4.x, `Psl\Json\Exception` is a namespace, not an instantiable class — this would cause a fatal error at runtime
+  - Fix: simplified both override bodies to rely solely on `JSON_THROW_ON_ERROR`, which throws PHP's built-in `\JsonException` (extends `\RuntimeException`) — clean and correct
+
+### Test Suite Quality ✅
+- **Eliminated 11 PHPUnit deprecations** — converted all `@covers`/`@uses`/`@group` docblock annotations to PHP 8 attributes across 8 test files:
+  - `AnyTest` → `#[CoversClass]` + `#[UsesClass]`
+  - `VecTest` → `#[CoversClass]` + `#[UsesClass]`
+  - `DictTest` → `#[CoversClass]`
+  - `IOTest` → `#[CoversClass]` + `#[UsesClass]`
+  - `StrictObjectTest` → `#[CoversClass]`
+  - `TypedCollectionTest` → `#[CoversClass]`
+  - `HttpClientTest` → 3× `#[CoversClass]` + 3× `#[Group('integration')]` on methods
+  - `FunctionShimsTest` → 24× `#[CoversFunction]` at class level (replacing per-method `@covers`)
+- **Eliminated 1 PHPUnit warning** — removed the `<coverage>` block from `phpunit.xml` (no coverage driver installed; the block triggered the "No code coverage driver available" warning on every run)
+- **Final PHPUnit status: `OK (208 tests, 271 assertions)` — zero warnings, zero deprecations**
+
+### Maintenance Cleanup ✅
+- **Removed empty ghost directory** `opt/corephp-vm/std/tests/Security/` (left over from Safe class deletion)
+- **`docs/std/Safe.md`** — converted from stale class documentation to an accurate migration reference guide
+- **`Makefile`** — added `make ci-check` target (runs `ci-test` + `ci-lint` in sequence without compose)
+- **`Makefile`** — added `make ci-test` and `make ci-lint` standalone targets (both added in previous session)
+
 ## What's Left to Build
 - [ ] Fix RoadRunner worker.php crash (`WorkerAllocate: EOF` in Docker compose — likely missing roadrunner-worker package in vendor)
 

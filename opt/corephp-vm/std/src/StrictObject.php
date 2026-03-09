@@ -40,8 +40,8 @@ abstract class StrictObject
                 'Attempt to read undefined property %s::$%s. '
                 . 'Define the property explicitly or check for typos.',
                 static::class,
-                $name
-            )
+                $name,
+            ),
         );
     }
 
@@ -57,8 +57,8 @@ abstract class StrictObject
                 . 'All properties must be declared explicitly.',
                 static::class,
                 $name,
-                get_debug_type($value)
-            )
+                get_debug_type($value),
+            ),
         );
     }
 
@@ -71,8 +71,8 @@ abstract class StrictObject
             sprintf(
                 'Attempt to check isset() on undefined property %s::$%s.',
                 static::class,
-                $name
-            )
+                $name,
+            ),
         );
     }
 
@@ -85,8 +85,8 @@ abstract class StrictObject
             sprintf(
                 'Attempt to unset() undefined property %s::$%s.',
                 static::class,
-                $name
-            )
+                $name,
+            ),
         );
     }
 }

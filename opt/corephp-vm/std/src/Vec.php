@@ -8,7 +8,7 @@ use core\Internal\Array\TypedCollection;
 use Psl\Vec as PslVec;
 
 /**
- * core\Vec — A typed sequential list. (Java ArrayList / Kotlin List equivalent)
+ * core\Vec — A typed sequential list. (Java ArrayList / Kotlin List equivalent).
  *
  * A thin semantic alias over TypedCollection for sequential, ordered data.
  * All items must be of the declared type. Mixed types throw immediately.
@@ -43,6 +43,7 @@ use Psl\Vec as PslVec;
  * Global alias: ArrayList (registered in bootstrap.php)
  *
  * @template T
+ *
  * @extends TypedCollection<T>
  */
 final class Vec extends TypedCollection
@@ -66,6 +67,7 @@ final class Vec extends TypedCollection
      * Backed by Psl\Vec\values().
      *
      * @template U
+     *
      * @param iterable<U> $iterable
      *
      * @return list<U>
@@ -80,6 +82,7 @@ final class Vec extends TypedCollection
      * Backed by Psl\Vec\filter().
      *
      * @template U
+     *
      * @param iterable<U>       $iterable
      * @param callable(U): bool $predicate
      *
@@ -96,7 +99,8 @@ final class Vec extends TypedCollection
      *
      * @template U
      * @template V
-     * @param iterable<U>   $iterable
+     *
+     * @param iterable<U>    $iterable
      * @param callable(U): V $transform
      *
      * @return list<V>
@@ -111,6 +115,7 @@ final class Vec extends TypedCollection
      * Backed by Psl\Vec\sort().
      *
      * @template U
+     *
      * @param iterable<U>         $iterable
      * @param callable(U, U): int $comparator
      *
@@ -126,6 +131,7 @@ final class Vec extends TypedCollection
      * Backed by Psl\Vec\reverse().
      *
      * @template U
+     *
      * @param iterable<U> $iterable
      *
      * @return list<U>
@@ -140,6 +146,7 @@ final class Vec extends TypedCollection
      * Backed by Psl\Vec\concat().
      *
      * @template U
+     *
      * @param iterable<U> $first
      * @param iterable<U> $second
      *

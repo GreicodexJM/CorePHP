@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace core\Tests\Net\Http;
 
-use PHPUnit\Framework\TestCase;
 use core\Net\Http\HttpClient;
 use core\Net\Http\HttpException;
 use core\Net\Http\HttpResponse;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \core\Net\Http\HttpClient
- * @covers \core\Net\Http\HttpResponse
- * @covers \core\Net\Http\HttpException
- *
- * NOTE: Integration tests (tagged @group integration) require a network connection
- * and hit https://httpbun.com (a public echo API). They are skipped automatically
- * when no network is available.
- *
- * Run unit-only tests:    vendor/bin/phpunit --exclude-group integration
- * Run integration tests:  vendor/bin/phpunit --group integration
- */
+// NOTE: Integration tests (tagged #[Group('integration')]) require a network connection
+// and hit https://httpbun.com (a public echo API). They are skipped automatically
+// when no network is available.
+//
+// Run unit-only tests:    vendor/bin/phpunit --exclude-group integration
+// Run integration tests:  vendor/bin/phpunit --group integration
+#[CoversClass(\core\Net\Http\HttpClient::class)]
+#[CoversClass(\core\Net\Http\HttpResponse::class)]
+#[CoversClass(\core\Net\Http\HttpException::class)]
 final class HttpClientTest extends TestCase
 {
     // =========================================================================
@@ -129,10 +128,10 @@ final class HttpClientTest extends TestCase
     public function testIsSuccess(): void
     {
         foreach ([200, 201, 204, 206, 299] as $code) {
-            self::assertTrue($this->makeResponse($code)->isSuccess(), "$code should be success");
+            self::assertTrue($this->makeResponse($code)->isSuccess(), "{$code} should be success");
         }
         foreach ([300, 400, 404, 500] as $code) {
-            self::assertFalse($this->makeResponse($code)->isSuccess(), "$code should not be success");
+            self::assertFalse($this->makeResponse($code)->isSuccess(), "{$code} should not be success");
         }
     }
 
@@ -154,14 +153,14 @@ final class HttpClientTest extends TestCase
 
     public function testJsonDecodesBodyAsArray(): void
     {
-        $r    = $this->makeResponse(200, '{"name":"Alice","age":30}');
+        $r = $this->makeResponse(200, '{"name":"Alice","age":30}');
         $data = $r->json(true);
         self::assertSame(['name' => 'Alice', 'age' => 30], $data);
     }
 
     public function testJsonDecodesBodyAsObject(): void
     {
-        $r    = $this->makeResponse(200, '{"name":"Alice"}');
+        $r = $this->makeResponse(200, '{"name":"Alice"}');
         $data = $r->json(false);
         self::assertInstanceOf(\stdClass::class, $data);
         self::assertSame('Alice', $data->name);
@@ -207,7 +206,7 @@ final class HttpClientTest extends TestCase
     public function testHeadersReturnsAllHeaders(): void
     {
         $headers = ['a' => '1', 'b' => '2'];
-        $r       = $this->makeResponse(200, '', $headers);
+        $r = $this->makeResponse(200, '', $headers);
         self::assertSame($headers, $r->headers());
     }
 
@@ -215,9 +214,7 @@ final class HttpClientTest extends TestCase
     // Integration tests — require network + httpbun.com
     // =========================================================================
 
-    /**
-     * @group integration
-     */
+    #[Group('integration')]
     public function testGetRequestReturnsSuccessfulResponse(): void
     {
         if (!$this->isNetworkAvailable()) {
@@ -229,9 +226,7 @@ final class HttpClientTest extends TestCase
         self::assertNotEmpty($response->body());
     }
 
-    /**
-     * @group integration
-     */
+    #[Group('integration')]
     public function testPostRequestSendsJsonBody(): void
     {
         if (!$this->isNetworkAvailable()) {
@@ -244,9 +239,7 @@ final class HttpClientTest extends TestCase
         self::assertArrayHasKey('json', $data);
     }
 
-    /**
-     * @group integration
-     */
+    #[Group('integration')]
     public function testStrictStatusThrowsOn404(): void
     {
         if (!$this->isNetworkAvailable()) {

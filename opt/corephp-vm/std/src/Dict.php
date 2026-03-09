@@ -7,7 +7,7 @@ namespace core;
 use Psl\Dict as PslDict;
 
 /**
- * core\Dict — A typed key-value dictionary. (Java HashMap / Python dict equivalent)
+ * core\Dict — A typed key-value dictionary. (Java HashMap / Python dict equivalent).
  *
  * Keys are always strings. Values must be of the declared type.
  * Accessing a missing key throws OutOfBoundsException instead of returning null.
@@ -27,6 +27,7 @@ use Psl\Dict as PslDict;
  * Global alias: Dict (registered in bootstrap.php — already a short name)
  *
  * @template V
+ *
  * @implements \ArrayAccess<string, V>
  * @implements \IteratorAggregate<string, V>
  */
@@ -51,7 +52,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
     {
         if (trim($type) === '') {
             throw new \InvalidArgumentException(
-                'Dict: value type must be a non-empty class name or primitive type string.'
+                'Dict: value type must be a non-empty class name or primitive type string.',
             );
         }
         $this->type = $type;
@@ -71,12 +72,12 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      *   Before: $config = ['host' => 'localhost', 'port' => '3306'];
      *   After:  $config = Dict::fromArray('string', ['host' => 'localhost', 'db' => 'app']);
      *
-     * @param string         $type Declared value type (FQCN or primitive)
-     * @param array<mixed>   $data Associative PHP array (non-string keys are cast to string)
-     *
-     * @return static<V>
+     * @param string       $type Declared value type (FQCN or primitive)
+     * @param array<mixed> $data Associative PHP array (non-string keys are cast to string)
      *
      * @throws \InvalidArgumentException on the first value with the wrong type
+     *
+     * @return static<V>
      */
     public static function fromArray(string $type, array $data): static
     {
@@ -118,9 +119,9 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      *
      * @param Dict<V> $other
      *
-     * @return static<V>
-     *
      * @throws \InvalidArgumentException if the declared types differ
+     *
+     * @return static<V>
      */
     public function merge(self $other): static
     {
@@ -129,8 +130,8 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
                 sprintf(
                     'Dict::merge() — type mismatch: cannot merge Dict<%s> into Dict<%s>.',
                     $other->getType(),
-                    $this->type
-                )
+                    $this->type,
+                ),
             );
         }
         $merged = static::fromArray($this->type, $this->data);
@@ -209,9 +210,9 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      *
      * @param string $key The key to retrieve
      *
-     * @return V The value
-     *
      * @throws \OutOfBoundsException if the key does not exist
+     *
+     * @return V The value
      */
     public function get(string $key): mixed
     {
@@ -221,8 +222,8 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
                     'Dict<%s>: key "%s" does not exist. Available keys: [%s]',
                     $this->type,
                     $key,
-                    implode(', ', array_keys($this->data))
-                )
+                    implode(', ', array_keys($this->data)),
+                ),
             );
         }
         return $this->data[$key];
@@ -231,8 +232,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
     /**
      * Return a value by key, or the given default if the key does not exist.
      *
-     * @param string $key
-     * @param V      $default
+     * @param V $default
      *
      * @return V
      */
@@ -358,8 +358,8 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
                         'Dict<%s>: expected value of type %s, got %s.',
                         $this->type,
                         $this->type,
-                        $actual
-                    )
+                        $actual,
+                    ),
                 );
             }
             return;
@@ -371,8 +371,8 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
                     'Dict<%s>: expected instance of %s, got %s.',
                     $this->type,
                     $this->type,
-                    $actual
-                )
+                    $actual,
+                ),
             );
         }
     }
@@ -398,6 +398,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      *
      * @template Tk of array-key
      * @template Tv
+     *
      * @param array<Tk, Tv> $first
      * @param array<Tk, Tv> $second
      *
@@ -414,6 +415,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      *
      * @template Tk of array-key
      * @template Tv
+     *
      * @param array<Tk, Tv>      $data
      * @param callable(Tv): bool $predicate
      *
@@ -430,6 +432,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      *
      * @template Tk of array-key
      * @template Tv
+     *
      * @param array<Tk, Tv>      $data
      * @param callable(Tk): bool $predicate
      *
@@ -447,7 +450,8 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      * @template Tk of array-key
      * @template Tv
      * @template Tu
-     * @param array<Tk, Tv>   $data
+     *
+     * @param array<Tk, Tv>    $data
      * @param callable(Tv): Tu $transform
      *
      * @return array<Tk, Tu>
@@ -463,8 +467,9 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      *
      * @template Tk of array-key
      * @template Tv
-     * @param array<Tk, Tv>  $data
-     * @param list<Tk>       $keys
+     *
+     * @param array<Tk, Tv> $data
+     * @param list<Tk>      $keys
      *
      * @return array<Tk, Tv>
      */
@@ -479,6 +484,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      *
      * @template Tk of array-key
      * @template Tv
+     *
      * @param array<Tk, Tv>         $data
      * @param callable(Tv, Tv): int $comparator
      *
@@ -495,6 +501,7 @@ final class Dict implements \ArrayAccess, \IteratorAggregate, \Countable
      *
      * @template Tk of array-key
      * @template Tv of array-key
+     *
      * @param array<Tk, Tv> $data
      *
      * @return array<Tv, Tk>

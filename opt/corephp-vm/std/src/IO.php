@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace core;
 
-use Psl\File\WriteMode;
-use Psl\Json;
-use Psl\File;
 use core\Net\Http\HttpClient;
 use core\Net\Http\HttpResponse;
+use Psl\File;
+use Psl\File\WriteMode;
+use Psl\Json;
 
 /**
  * core\IO — Safe I/O façade for file and HTTP operations.
@@ -35,9 +35,9 @@ final class IO
      * @param int      $offset Byte offset to start reading from
      * @param int|null $length Maximum number of bytes to read
      *
-     * @return string The file contents
-     *
      * @throws \Psl\File\Exception\RuntimeException if file does not exist or is unreadable
+     *
+     * @return string The file contents
      */
     public static function read(string $path, int $offset = 0, ?int $length = null): string
     {
@@ -57,9 +57,9 @@ final class IO
      * @param string $data   Data to write
      * @param bool   $append Append to existing file instead of overwriting
      *
-     * @return int Bytes written (strlen of $data)
-     *
      * @throws \Psl\File\Exception\RuntimeException if write fails
+     *
+     * @return int Bytes written (strlen of $data)
      */
     public static function write(string $path, string $data, bool $append = false): int
     {
@@ -75,9 +75,9 @@ final class IO
      * @param string $path File path
      * @param string $data Data to append
      *
-     * @return int Bytes written (strlen of $data)
-     *
      * @throws \Psl\File\Exception\RuntimeException if write fails
+     *
+     * @return int Bytes written (strlen of $data)
      */
     public static function append(string $path, string $data): int
     {
@@ -92,10 +92,10 @@ final class IO
      * @param string $path        Path to JSON file
      * @param bool   $associative Return associative array instead of object
      *
-     * @return mixed The decoded JSON value
+     * @throws \Psl\File\Exception\NotFoundException if file does not exist
+     * @throws \Psl\Json\Exception\DecodeException   if file content is not valid JSON
      *
-     * @throws \Psl\File\Exception\NotFoundException  if file does not exist
-     * @throws \Psl\Json\Exception\DecodeException    if file content is not valid JSON
+     * @return mixed The decoded JSON value
      */
     public static function json(string $path, bool $associative = true): mixed
     {
@@ -111,10 +111,10 @@ final class IO
      * @param mixed  $data   Data to encode and write
      * @param bool   $pretty Pretty-print the JSON output
      *
-     * @return int Bytes written (strlen of encoded JSON)
+     * @throws \Psl\Json\Exception\EncodeException  if data cannot be encoded
+     * @throws \Psl\File\Exception\RuntimeException if write fails
      *
-     * @throws \Psl\Json\Exception\EncodeException     if data cannot be encoded
-     * @throws \Psl\File\Exception\RuntimeException    if write fails
+     * @return int Bytes written (strlen of encoded JSON)
      */
     public static function writeJson(string $path, mixed $data, bool $pretty = true): int
     {
@@ -138,7 +138,6 @@ final class IO
     /**
      * Perform a quick GET request.
      *
-     * @param string                $url
      * @param array<string, string> $headers
      *
      * @throws \core\Net\Http\HttpException on transport failure
@@ -151,7 +150,6 @@ final class IO
     /**
      * Perform a quick POST request.
      *
-     * @param string                      $url
      * @param array<string, mixed>|string $body
      * @param array<string, string>       $headers
      *

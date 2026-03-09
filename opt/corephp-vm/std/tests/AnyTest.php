@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace core\Tests;
 
-use PHPUnit\Framework\TestCase;
 use core\Any;
 use core\StrictObject;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \core\Any
- * @uses   \core\StrictObject
- */
+#[CoversClass(\core\Any::class)]
+#[UsesClass(\core\StrictObject::class)]
 final class AnyTest extends TestCase
 {
     // -------------------------------------------------------------------------
@@ -20,7 +20,7 @@ final class AnyTest extends TestCase
 
     private function makeAny(): Any
     {
-        return new class extends Any {
+        return new class () extends Any {
             public string $name = 'test';
         };
     }
@@ -57,7 +57,7 @@ final class AnyTest extends TestCase
     public function testToStringContainsObjectId(): void
     {
         $obj = $this->makeAny();
-        $id  = spl_object_id($obj);
+        $id = spl_object_id($obj);
         self::assertStringContainsString((string) $id, (string) $obj);
     }
 
@@ -81,7 +81,7 @@ final class AnyTest extends TestCase
 
     public function testDeclaredPropertyWritable(): void
     {
-        $obj       = $this->makeAny();
+        $obj = $this->makeAny();
         $obj->name = 'changed';
         self::assertSame('changed', $obj->name);
     }

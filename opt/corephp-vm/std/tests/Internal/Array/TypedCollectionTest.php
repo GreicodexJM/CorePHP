@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace core\Tests\Internal\Array;
 
-use PHPUnit\Framework\TestCase;
 use core\Internal\Array\TypedCollection;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \core\Internal\Array\TypedCollection
- */
+#[CoversClass(\core\Internal\Array\TypedCollection::class)]
 final class TypedCollectionTest extends TestCase
 {
     // =========================================================================
@@ -121,7 +120,7 @@ final class TypedCollectionTest extends TestCase
     public function testFromIterableAcceptsAnotherCollection(): void
     {
         $source = TypedCollection::fromArray('int', [1, 2, 3]);
-        $copy   = TypedCollection::fromIterable('int', $source);
+        $copy = TypedCollection::fromIterable('int', $source);
         self::assertSame($source->toArray(), $copy->toArray());
     }
 
@@ -232,28 +231,28 @@ final class TypedCollectionTest extends TestCase
 
     public function testFilterReturnsMatchingItems(): void
     {
-        $col      = TypedCollection::fromArray('int', [1, 2, 3, 4, 5]);
-        $evens    = $col->filter(static fn(int $n): bool => $n % 2 === 0);
+        $col = TypedCollection::fromArray('int', [1, 2, 3, 4, 5]);
+        $evens = $col->filter(static fn (int $n): bool => $n % 2 === 0);
         self::assertSame([2, 4], $evens->toArray());
     }
 
     public function testMapTransformsItems(): void
     {
-        $col     = TypedCollection::fromArray('int', [1, 2, 3]);
-        $doubled = $col->map(static fn(int $n): int => $n * 2, 'int');
+        $col = TypedCollection::fromArray('int', [1, 2, 3]);
+        $doubled = $col->map(static fn (int $n): int => $n * 2, 'int');
         self::assertSame([2, 4, 6], $doubled->toArray());
     }
 
     public function testReduceAccumulatesValue(): void
     {
         $col = TypedCollection::fromArray('int', [1, 2, 3, 4]);
-        $sum = $col->reduce(static fn(int $carry, int $item): int => $carry + $item, 0);
+        $sum = $col->reduce(static fn (int $carry, int $item): int => $carry + $item, 0);
         self::assertSame(10, $sum);
     }
 
     public function testEachIteratesAllItems(): void
     {
-        $col     = TypedCollection::fromArray('int', [10, 20, 30]);
+        $col = TypedCollection::fromArray('int', [10, 20, 30]);
         $visited = [];
         $col->each(static function (int $item, int $index) use (&$visited): void {
             $visited[$index] = $item;
@@ -267,8 +266,8 @@ final class TypedCollectionTest extends TestCase
 
     public function testArrayAccessOffsetSet(): void
     {
-        $col    = new TypedCollection('int');
-        $col[]  = 42;
+        $col = new TypedCollection('int');
+        $col[] = 42;
         self::assertSame(42, $col[0]);
     }
 
@@ -292,7 +291,7 @@ final class TypedCollectionTest extends TestCase
 
     public function testForeachIteratesAllItems(): void
     {
-        $col    = TypedCollection::fromArray('int', [1, 2, 3]);
+        $col = TypedCollection::fromArray('int', [1, 2, 3]);
         $result = [];
         foreach ($col as $k => $v) {
             $result[$k] = $v;
@@ -316,7 +315,7 @@ final class TypedCollectionTest extends TestCase
 
     public function testReverseReturnsReversedCollection(): void
     {
-        $col      = TypedCollection::fromArray('int', [1, 2, 3]);
+        $col = TypedCollection::fromArray('int', [1, 2, 3]);
         $reversed = $col->reverse();
         self::assertSame([3, 2, 1], $reversed->toArray());
     }
@@ -340,14 +339,14 @@ final class TypedCollectionTest extends TestCase
 
     public function testSliceReturnsSubset(): void
     {
-        $col   = TypedCollection::fromArray('int', [10, 20, 30, 40, 50]);
+        $col = TypedCollection::fromArray('int', [10, 20, 30, 40, 50]);
         $slice = $col->slice(1, 3);
         self::assertSame([20, 30, 40], $slice->toArray());
     }
 
     public function testSliceToEndWhenLengthNull(): void
     {
-        $col   = TypedCollection::fromArray('int', [1, 2, 3, 4]);
+        $col = TypedCollection::fromArray('int', [1, 2, 3, 4]);
         $slice = $col->slice(2);
         self::assertSame([3, 4], $slice->toArray());
     }
@@ -365,17 +364,17 @@ final class TypedCollectionTest extends TestCase
 
     public function testChunkSplitsCollection(): void
     {
-        $col    = TypedCollection::fromArray('int', [1, 2, 3, 4, 5]);
+        $col = TypedCollection::fromArray('int', [1, 2, 3, 4, 5]);
         $chunks = $col->chunk(2);
         self::assertCount(3, $chunks);
         self::assertSame([1, 2], $chunks[0]->toArray());
         self::assertSame([3, 4], $chunks[1]->toArray());
-        self::assertSame([5],    $chunks[2]->toArray());
+        self::assertSame([5], $chunks[2]->toArray());
     }
 
     public function testChunkReturnsTypedCollections(): void
     {
-        $col    = TypedCollection::fromArray('string', ['a', 'b', 'c']);
+        $col = TypedCollection::fromArray('string', ['a', 'b', 'c']);
         $chunks = $col->chunk(2);
         self::assertInstanceOf(TypedCollection::class, $chunks[0]);
     }
@@ -392,22 +391,22 @@ final class TypedCollectionTest extends TestCase
 
     public function testSortReturnsSortedCollection(): void
     {
-        $col    = TypedCollection::fromArray('int', [3, 1, 4, 1, 5, 9, 2, 6]);
-        $sorted = $col->sort(fn(int $a, int $b) => $a <=> $b);
+        $col = TypedCollection::fromArray('int', [3, 1, 4, 1, 5, 9, 2, 6]);
+        $sorted = $col->sort(fn (int $a, int $b) => $a <=> $b);
         self::assertSame([1, 1, 2, 3, 4, 5, 6, 9], $sorted->toArray());
     }
 
     public function testSortDescending(): void
     {
-        $col    = TypedCollection::fromArray('int', [3, 1, 2]);
-        $sorted = $col->sort(fn(int $a, int $b) => $b <=> $a);
+        $col = TypedCollection::fromArray('int', [3, 1, 2]);
+        $sorted = $col->sort(fn (int $a, int $b) => $b <=> $a);
         self::assertSame([3, 2, 1], $sorted->toArray());
     }
 
     public function testSortDoesNotMutateOriginal(): void
     {
         $col = TypedCollection::fromArray('int', [3, 1, 2]);
-        $col->sort(fn($a, $b) => $a <=> $b);
+        $col->sort(fn ($a, $b) => $a <=> $b);
         self::assertSame([3, 1, 2], $col->toArray());
     }
 
@@ -417,7 +416,7 @@ final class TypedCollectionTest extends TestCase
 
     public function testUniqueRemovesDuplicates(): void
     {
-        $col    = TypedCollection::fromArray('int', [1, 2, 2, 3, 3, 3]);
+        $col = TypedCollection::fromArray('int', [1, 2, 2, 3, 3, 3]);
         $unique = $col->unique();
         self::assertSame([1, 2, 3], $unique->toArray());
     }

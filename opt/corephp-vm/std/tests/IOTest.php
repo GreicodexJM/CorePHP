@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace core\Tests;
 
-use PHPUnit\Framework\TestCase;
 use core\IO;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\TestCase;
 use Psl\File\Exception\NotFoundException as FileNotFoundException;
 use Psl\File\Exception\RuntimeException as FileException;
 use Psl\Json\Exception\DecodeException as JsonDecodeException;
 
-/**
- * @covers \core\IO
- * @uses   \core\Net\Http\HttpClient
- */
+#[CoversClass(\core\IO::class)]
+#[UsesClass(\core\Net\Http\HttpClient::class)]
 final class IOTest extends TestCase
 {
     private string $tmpFile;
@@ -21,8 +21,8 @@ final class IOTest extends TestCase
 
     protected function setUp(): void
     {
-        $base              = sys_get_temp_dir() . '/corephp_io_test_' . uniqid();
-        $this->tmpFile     = $base . '.txt';
+        $base = sys_get_temp_dir() . '/corephp_io_test_' . uniqid();
+        $this->tmpFile = $base . '.txt';
         $this->tmpJsonFile = $base . '.json';
     }
 
@@ -65,7 +65,7 @@ final class IOTest extends TestCase
 
     public function testWriteReturnsByteCount(): void
     {
-        $data  = 'hello world';
+        $data = 'hello world';
         $bytes = IO::write($this->tmpFile, $data);
         self::assertSame(strlen($data), $bytes);
     }
@@ -126,7 +126,7 @@ final class IOTest extends TestCase
 
     public function testWriteJsonEncodesAndWritesFile(): void
     {
-        $data  = ['host' => 'localhost', 'port' => 3306];
+        $data = ['host' => 'localhost', 'port' => 3306];
         $bytes = IO::writeJson($this->tmpJsonFile, $data);
         self::assertGreaterThan(0, $bytes);
         $decoded = json_decode(file_get_contents($this->tmpJsonFile), true);
@@ -135,7 +135,7 @@ final class IOTest extends TestCase
 
     public function testWriteJsonReturnsByteCount(): void
     {
-        $data  = ['key' => 'value'];
+        $data = ['key' => 'value'];
         $bytes = IO::writeJson($this->tmpJsonFile, $data);
         self::assertSame(filesize($this->tmpJsonFile), $bytes);
     }

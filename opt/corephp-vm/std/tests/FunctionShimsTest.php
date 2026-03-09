@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace core\Tests;
 
+use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 use Psl\File\Exception\NotFoundException as FileNotFoundException;
 use Psl\File\Exception\RuntimeException as FileException;
@@ -11,34 +12,31 @@ use Psl\Json\Exception\DecodeException as JsonDecodeException;
 use Psl\Json\Exception\EncodeException as JsonEncodeException;
 use Psl\Type\Exception\CoercionException;
 
-/**
- * Tests for all global PSL-backed function shims defined in functions.php.
- *
- * @covers ::s_json
- * @covers ::s_enc
- * @covers ::s_int
- * @covers ::s_float
- * @covers ::s_str
- * @covers ::s_bool
- * @covers ::s_file
- * @covers ::s_write
- * @covers ::s_append
- * @covers ::s_fwrite
- * @covers ::s_match
- * @covers ::s_regex
- * @covers ::s_regex_all
- * @covers ::s_env
- * @covers ::s_env_or
- * @covers ::arr_to_list
- * @covers ::list_to_arr
- * @covers ::arr_to_dict
- * @covers ::dict_to_arr
- * @covers ::vec_filter
- * @covers ::vec_map
- * @covers ::dict_filter
- * @covers ::dict_map
- * @covers ::dict_merge
- */
+/** Tests for all global PSL-backed function shims defined in functions.php. */
+#[CoversFunction('s_json')]
+#[CoversFunction('s_enc')]
+#[CoversFunction('s_int')]
+#[CoversFunction('s_float')]
+#[CoversFunction('s_str')]
+#[CoversFunction('s_bool')]
+#[CoversFunction('s_file')]
+#[CoversFunction('s_write')]
+#[CoversFunction('s_append')]
+#[CoversFunction('s_fwrite')]
+#[CoversFunction('s_match')]
+#[CoversFunction('s_regex')]
+#[CoversFunction('s_regex_all')]
+#[CoversFunction('s_env')]
+#[CoversFunction('s_env_or')]
+#[CoversFunction('arr_to_list')]
+#[CoversFunction('list_to_arr')]
+#[CoversFunction('arr_to_dict')]
+#[CoversFunction('dict_to_arr')]
+#[CoversFunction('vec_filter')]
+#[CoversFunction('vec_map')]
+#[CoversFunction('dict_filter')]
+#[CoversFunction('dict_map')]
+#[CoversFunction('dict_merge')]
 final class FunctionShimsTest extends TestCase
 {
     private string $tmpFile;
@@ -414,13 +412,13 @@ final class FunctionShimsTest extends TestCase
 
     public function testVecFilterFiltersElements(): void
     {
-        $result = vec_filter([1, 2, 3, 4, 5], fn(int $n) => $n > 3);
+        $result = vec_filter([1, 2, 3, 4, 5], fn (int $n) => $n > 3);
         self::assertSame([4, 5], $result);
     }
 
     public function testVecMapTransformsElements(): void
     {
-        $result = vec_map([1, 2, 3], fn(int $n) => $n * 10);
+        $result = vec_map([1, 2, 3], fn (int $n) => $n * 10);
         self::assertSame([10, 20, 30], $result);
     }
 
@@ -430,13 +428,13 @@ final class FunctionShimsTest extends TestCase
 
     public function testDictFilterFiltersValues(): void
     {
-        $result = dict_filter(['a' => 1, 'b' => 5, 'c' => 2], fn(int $v) => $v > 2);
+        $result = dict_filter(['a' => 1, 'b' => 5, 'c' => 2], fn (int $v) => $v > 2);
         self::assertSame(['b' => 5], $result);
     }
 
     public function testDictMapTransformsValues(): void
     {
-        $result = dict_map(['a' => 1, 'b' => 2], fn(int $v) => $v * 100);
+        $result = dict_map(['a' => 1, 'b' => 2], fn (int $v) => $v * 100);
         self::assertSame(['a' => 100, 'b' => 200], $result);
     }
 

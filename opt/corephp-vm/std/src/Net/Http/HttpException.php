@@ -26,7 +26,7 @@ final class HttpException extends \RuntimeException
     {
         return new self(
             sprintf('HTTP transport error [curl errno %d]: %s', $curlErrno, $curlError),
-            $curlErrno
+            $curlErrno,
         );
     }
 
@@ -44,9 +44,9 @@ final class HttpException extends \RuntimeException
                 'HTTP request to %s returned error status %d. Body: %s',
                 $url,
                 $statusCode,
-                substr($body, 0, 500)
+                substr($body, 0, 500),
             ),
-            $statusCode
+            $statusCode,
         );
     }
 }

@@ -90,6 +90,9 @@ ci-lint: ## Run PHPStan + CS-Fixer standalone (no compose needed; mounts CI php.
 	  sh /app/ci/lint.sh
 	@echo "✓ Lint passed"
 
+ci-check: ci-test ci-lint ## Run full quality gate standalone (no compose needed)
+	@echo "✓ ci-check passed — all tests and lint clean"
+
 # ---------------------------------------------------------------------------
 # RoadRunner
 # ---------------------------------------------------------------------------

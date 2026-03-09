@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace core\Tests;
 
-use PHPUnit\Framework\TestCase;
 use core\Dict;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \core\Dict
- */
+#[CoversClass(\core\Dict::class)]
 final class DictTest extends TestCase
 {
     // =========================================================================
@@ -162,8 +161,8 @@ final class DictTest extends TestCase
 
     public function testFromObjectCreatesDict(): void
     {
-        $obj    = json_decode('{"host":"localhost","port":"3306"}');
-        $dict   = Dict::fromObject('string', $obj);
+        $obj = json_decode('{"host":"localhost","port":"3306"}');
+        $dict = Dict::fromObject('string', $obj);
         self::assertSame('localhost', $dict->get('host'));
         self::assertSame('3306', $dict->get('port'));
     }
@@ -212,7 +211,7 @@ final class DictTest extends TestCase
 
     public function testOnlyReturnsSubsetOfKeys(): void
     {
-        $dict   = Dict::fromArray('string', ['a' => 'A', 'b' => 'B', 'c' => 'C']);
+        $dict = Dict::fromArray('string', ['a' => 'A', 'b' => 'B', 'c' => 'C']);
         $subset = $dict->only('a', 'c');
         self::assertSame(['a', 'c'], $subset->keys());
         self::assertFalse($subset->has('b'));
@@ -220,14 +219,14 @@ final class DictTest extends TestCase
 
     public function testOnlySilentlySkipsMissingKeys(): void
     {
-        $dict   = Dict::fromArray('string', ['a' => 'A']);
+        $dict = Dict::fromArray('string', ['a' => 'A']);
         $subset = $dict->only('a', 'nonexistent');
         self::assertSame(['a'], $subset->keys());
     }
 
     public function testExceptReturnsAllExceptSpecified(): void
     {
-        $dict     = Dict::fromArray('string', ['a' => 'A', 'b' => 'B', 'c' => 'C']);
+        $dict = Dict::fromArray('string', ['a' => 'A', 'b' => 'B', 'c' => 'C']);
         $filtered = $dict->except('b');
         self::assertTrue($filtered->has('a'));
         self::assertFalse($filtered->has('b'));
@@ -240,7 +239,7 @@ final class DictTest extends TestCase
 
     public function testArrayAccessSet(): void
     {
-        $dict         = new Dict('string');
+        $dict = new Dict('string');
         $dict['host'] = 'localhost';
         self::assertSame('localhost', $dict['host']);
     }
@@ -265,7 +264,7 @@ final class DictTest extends TestCase
 
     public function testForeachIteratesKeyValuePairs(): void
     {
-        $dict   = Dict::fromArray('string', ['a' => 'A', 'b' => 'B']);
+        $dict = Dict::fromArray('string', ['a' => 'A', 'b' => 'B']);
         $result = [];
         foreach ($dict as $key => $value) {
             $result[$key] = $value;

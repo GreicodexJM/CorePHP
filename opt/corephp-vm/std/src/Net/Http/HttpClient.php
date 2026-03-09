@@ -27,34 +27,34 @@ namespace core\Net\Http;
  */
 final class HttpClient
 {
-    private const DEFAULT_TIMEOUT       = 30;
+    private const DEFAULT_TIMEOUT = 30;
     private const DEFAULT_CONNECT_TIMEOUT = 10;
-    private const USER_AGENT            = 'CorePHP-HttpClient/1.0 (PHP-JVM)';
+    private const USER_AGENT = 'CorePHP-HttpClient/1.0 (PHP-JVM)';
 
     /**
-     * @param int                   $timeout        Maximum total execution time in seconds
-     * @param int                   $connectTimeout Connection timeout in seconds
-     * @param bool                  $strictStatus   If true, throw HttpException on 4xx/5xx responses
+     * @param int                   $timeout         Maximum total execution time in seconds
+     * @param int                   $connectTimeout  Connection timeout in seconds
+     * @param bool                  $strictStatus    If true, throw HttpException on 4xx/5xx responses
      * @param bool                  $followRedirects If true, follow HTTP redirects
-     * @param int                   $maxRedirects   Maximum number of redirects to follow
+     * @param int                   $maxRedirects    Maximum number of redirects to follow
      * @param array<string, string> $defaultHeaders  Headers sent with every request (merged before per-request headers)
      */
     public function __construct(
-        private readonly int   $timeout        = self::DEFAULT_TIMEOUT,
+        private readonly int   $timeout = self::DEFAULT_TIMEOUT,
         private readonly int   $connectTimeout = self::DEFAULT_CONNECT_TIMEOUT,
-        private readonly bool  $strictStatus   = false,
+        private readonly bool  $strictStatus = false,
         private readonly bool  $followRedirects = true,
-        private readonly int   $maxRedirects   = 5,
-        private readonly array $defaultHeaders  = [],
+        private readonly int   $maxRedirects = 5,
+        private readonly array $defaultHeaders = [],
     ) {
         if ($this->timeout <= 0) {
             throw new \InvalidArgumentException(
-                sprintf('HttpClient: timeout must be a positive integer, got %d.', $this->timeout)
+                sprintf('HttpClient: timeout must be a positive integer, got %d.', $this->timeout),
             );
         }
         if ($this->connectTimeout <= 0) {
             throw new \InvalidArgumentException(
-                sprintf('HttpClient: connectTimeout must be a positive integer, got %d.', $this->connectTimeout)
+                sprintf('HttpClient: connectTimeout must be a positive integer, got %d.', $this->connectTimeout),
             );
         }
     }
@@ -75,9 +75,9 @@ final class HttpClient
     /**
      * Perform an HTTP POST request.
      *
-     * @param string                     $url     The URL to request
+     * @param string                      $url     The URL to request
      * @param array<string, mixed>|string $body    Request body (array = JSON, string = raw)
-     * @param array<string, string>      $headers Additional HTTP headers
+     * @param array<string, string>       $headers Additional HTTP headers
      *
      * @throws HttpException on curl error or (if strictStatus) on 4xx/5xx
      */
@@ -89,9 +89,8 @@ final class HttpClient
     /**
      * Perform an HTTP PUT request.
      *
-     * @param string                     $url
      * @param array<string, mixed>|string $body
-     * @param array<string, string>      $headers
+     * @param array<string, string>       $headers
      *
      * @throws HttpException
      */
@@ -103,7 +102,6 @@ final class HttpClient
     /**
      * Perform an HTTP PATCH request.
      *
-     * @param string                      $url
      * @param array<string, mixed>|string $body
      * @param array<string, string>       $headers
      *
@@ -117,7 +115,6 @@ final class HttpClient
     /**
      * Perform an HTTP DELETE request.
      *
-     * @param string                $url
      * @param array<string, string> $headers
      *
      * @throws HttpException
@@ -139,7 +136,7 @@ final class HttpClient
         string             $url,
         string             $method,
         array|string|null  $body,
-        array              $headers
+        array              $headers,
     ): HttpResponse {
         if (trim($url) === '') {
             throw new HttpException('HttpClient: URL cannot be empty.');
@@ -175,8 +172,8 @@ final class HttpClient
             }
 
             $statusCode = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
-            $finalUrl   = (string) curl_getinfo($handle, CURLINFO_EFFECTIVE_URL);
-            $totalTime  = (float) curl_getinfo($handle, CURLINFO_TOTAL_TIME);
+            $finalUrl = (string) curl_getinfo($handle, CURLINFO_EFFECTIVE_URL);
+            $totalTime = (float) curl_getinfo($handle, CURLINFO_TOTAL_TIME);
 
             /** @var string $rawBody */
             $response = new HttpResponse(
@@ -184,7 +181,7 @@ final class HttpClient
                 $rawBody,
                 $responseHeaders,
                 $finalUrl,
-                $totalTime
+                $totalTime,
             );
 
             if ($this->strictStatus && ($response->isClientError() || $response->isServerError())) {
@@ -201,7 +198,6 @@ final class HttpClient
     /**
      * Configure curl options on the given handle.
      *
-     * @param \CurlHandle                      $handle
      * @param array<string, mixed>|string|null $body
      * @param array<string, string>            $extraHeaders
      */
@@ -210,7 +206,7 @@ final class HttpClient
         string             $url,
         string             $method,
         array|string|null  $body,
-        array              $extraHeaders
+        array              $extraHeaders,
     ): void {
         // URL is already validated as non-empty in execute(); assert here for PHPStan
         assert($url !== '', 'HttpClient: URL must be non-empty at this point.');
@@ -232,7 +228,7 @@ final class HttpClient
         $headers = array_merge(
             ['accept' => 'application/json'],
             array_change_key_case($this->defaultHeaders, CASE_LOWER),
-            array_change_key_case($extraHeaders, CASE_LOWER)
+            array_change_key_case($extraHeaders, CASE_LOWER),
         );
 
         // Prepare body and set method

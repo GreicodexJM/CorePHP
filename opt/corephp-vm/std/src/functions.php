@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * CorePHP — Global Safety Function Shims
+ * CorePHP — Global Safety Function Shims.
  *
  * Globally available functions (no `use` or namespace required) backed by
  * the azjezz/psl standard library. All throw typed PSL exceptions on failure —
@@ -54,6 +54,7 @@ declare(strict_types=1);
  */
 
 use core\Net\Http\HttpResponse;
+use Psl\Dict;
 use Psl\Env;
 use Psl\File;
 use Psl\File\WriteMode;
@@ -61,7 +62,6 @@ use Psl\Json;
 use Psl\Regex;
 use Psl\Type;
 use Psl\Vec;
-use Psl\Dict;
 
 // =============================================================================
 // JSON
@@ -74,9 +74,9 @@ if (!function_exists('s_json')) {
      * @param string $json        The JSON string
      * @param bool   $associative Return as associative array (default: true)
      *
-     * @return mixed The decoded value
-     *
      * @throws \Psl\Json\Exception\DecodeException on invalid JSON or empty string
+     *
+     * @return mixed The decoded value
      */
     function s_json(string $json, bool $associative = true): mixed
     {
@@ -92,9 +92,9 @@ if (!function_exists('s_enc')) {
      * @param bool  $pretty Pretty-print the JSON output (default: false)
      * @param int   $flags  Additional JSON flags
      *
-     * @return string The JSON-encoded string
-     *
      * @throws \Psl\Json\Exception\EncodeException if encoding fails
+     *
+     * @return string The JSON-encoded string
      */
     function s_enc(mixed $value, bool $pretty = false, int $flags = 0): string
     {
@@ -112,9 +112,7 @@ if (!function_exists('s_int')) {
      * Accepts: int, float, numeric string, bool.
      * Rejects: non-numeric strings, arrays, objects, null.
      *
-     * @param mixed $value
      *
-     * @return int
      *
      * @throws \Psl\Type\Exception\CoercionException for non-coercible values
      */
@@ -130,9 +128,7 @@ if (!function_exists('s_float')) {
      * Accepts: float, int, numeric string.
      * Rejects: non-numeric strings, arrays, objects, null, bool.
      *
-     * @param mixed $value
      *
-     * @return float
      *
      * @throws \Psl\Type\Exception\CoercionException for non-coercible values
      */
@@ -148,9 +144,7 @@ if (!function_exists('s_str')) {
      * Accepts: string, int, float, Stringable objects.
      * Rejects: arrays, non-Stringable objects, null, bool.
      *
-     * @param mixed $value
      *
-     * @return string
      *
      * @throws \Psl\Type\Exception\CoercionException for non-coercible values
      */
@@ -166,9 +160,7 @@ if (!function_exists('s_bool')) {
      * Accepts: bool, int (0/1), string ('true'/'false'/'1'/'0').
      * Rejects: other types.
      *
-     * @param mixed $value
      *
-     * @return bool
      *
      * @throws \Psl\Type\Exception\CoercionException for non-coercible values
      */
@@ -191,9 +183,9 @@ if (!function_exists('s_file')) {
      * @param int      $offset Byte offset to start reading from
      * @param int|null $length Maximum number of bytes to read
      *
-     * @return string The file contents
-     *
      * @throws \Psl\File\Exception\RuntimeException if file missing or unreadable
+     *
+     * @return string The file contents
      */
     function s_file(string $path, int $offset = 0, ?int $length = null): string
     {
@@ -214,9 +206,9 @@ if (!function_exists('s_write')) {
      * @param string $data   Data to write
      * @param bool   $append Append to file instead of overwriting (default: false)
      *
-     * @return int Bytes written (strlen of $data)
-     *
      * @throws \Psl\File\Exception\RuntimeException if write fails
+     *
+     * @return int Bytes written (strlen of $data)
      */
     function s_write(string $path, string $data, bool $append = false): int
     {
@@ -235,9 +227,9 @@ if (!function_exists('s_append')) {
      * @param string $path File path
      * @param string $data Data to append
      *
-     * @return int Bytes written (strlen of $data)
-     *
      * @throws \Psl\File\Exception\RuntimeException if write fails
+     *
+     * @return int Bytes written (strlen of $data)
      */
     function s_append(string $path, string $data): int
     {
@@ -255,21 +247,21 @@ if (!function_exists('s_fwrite')) {
      * @param resource $handle An open file handle (from fopen())
      * @param string   $data   Data to write
      *
-     * @return int Bytes written
-     *
      * @throws \Psl\File\Exception\RuntimeException if fwrite fails
+     *
+     * @return int Bytes written
      */
     function s_fwrite(mixed $handle, string $data): int
     {
         if (!is_resource($handle)) {
             throw new \Psl\File\Exception\RuntimeException(
-                's_fwrite: $handle must be an open file resource, got ' . get_debug_type($handle)
+                's_fwrite: $handle must be an open file resource, got ' . get_debug_type($handle),
             );
         }
         $result = \fwrite($handle, $data);
         if ($result === false) {
             throw new \Psl\File\Exception\RuntimeException(
-                's_fwrite: fwrite() failed — handle may be closed or the filesystem is full.'
+                's_fwrite: fwrite() failed — handle may be closed or the filesystem is full.',
             );
         }
         return $result;
@@ -287,9 +279,9 @@ if (!function_exists('s_match')) {
      * @param non-empty-string $pattern PCRE pattern (e.g. '/^\d+$/')
      * @param string           $subject String to test
      *
-     * @return bool True if the pattern matches
-     *
      * @throws \Psl\Regex\Exception\RuntimeException on invalid pattern
+     *
+     * @return bool True if the pattern matches
      */
     function s_match(string $pattern, string $subject): bool
     {
@@ -305,9 +297,9 @@ if (!function_exists('s_regex')) {
      * @param non-empty-string $pattern PCRE pattern
      * @param string           $subject String to search
      *
-     * @return array<array-key, string>|null Match groups, or null if no match
-     *
      * @throws \Psl\Regex\Exception\RuntimeException on invalid pattern
+     *
+     * @return array<array-key, string>|null Match groups, or null if no match
      */
     function s_regex(string $pattern, string $subject): ?array
     {
@@ -323,9 +315,9 @@ if (!function_exists('s_regex_all')) {
      * @param non-empty-string $pattern PCRE pattern
      * @param string           $subject String to search
      *
-     * @return list<array<array-key, string>> All match groups
-     *
      * @throws \Psl\Regex\Exception\RuntimeException on invalid pattern
+     *
+     * @return list<array<array-key, string>> All match groups
      */
     function s_regex_all(string $pattern, string $subject): array
     {
@@ -345,9 +337,9 @@ if (!function_exists('s_env')) {
      *
      * @param string $key Environment variable name
      *
-     * @return string The environment variable value
-     *
      * @throws \RuntimeException if the variable is not set
+     *
+     * @return string The environment variable value
      */
     function s_env(string $key): string
     {
@@ -358,8 +350,8 @@ if (!function_exists('s_env')) {
                 sprintf(
                     's_env: environment variable "%s" is not set. '
                     . 'Ensure it is defined in your .env file or container configuration.',
-                    $key
-                )
+                    $key,
+                ),
             );
         }
         return $value;
@@ -372,8 +364,6 @@ if (!function_exists('s_env_or')) {
      *
      * @param string $key     Environment variable name
      * @param string $default Fallback value if the variable is not set
-     *
-     * @return string
      */
     function s_env_or(string $key, string $default): string
     {
@@ -393,8 +383,6 @@ if (!function_exists('s_get')) {
      * @param string                $url     The URL to request
      * @param array<string, string> $headers Optional headers
      *
-     * @return HttpResponse
-     *
      * @throws \core\Net\Http\HttpException on transport failure
      */
     function s_get(string $url, array $headers = []): HttpResponse
@@ -410,8 +398,6 @@ if (!function_exists('s_post')) {
      * @param string                      $url     The URL to post to
      * @param array<string, mixed>|string $body    Request body
      * @param array<string, string>       $headers Optional headers
-     *
-     * @return HttpResponse
      *
      * @throws \core\Net\Http\HttpException on transport failure
      */
@@ -439,9 +425,9 @@ if (!function_exists('arr_to_list')) {
      * @param string       $type  Declared element type (FQCN or primitive)
      * @param array<mixed> $items Plain PHP array (sequential or associative)
      *
-     * @return \core\Vec<mixed>
-     *
      * @throws \InvalidArgumentException on type mismatch
+     *
+     * @return \core\Vec<mixed>
      */
     function arr_to_list(string $type, array $items): \core\Vec
     {
@@ -479,9 +465,9 @@ if (!function_exists('arr_to_dict')) {
      * @param string               $type Declared value type (FQCN or primitive)
      * @param array<string, mixed> $data Associative PHP array
      *
-     * @return \core\Dict<mixed>
-     *
      * @throws \InvalidArgumentException on type mismatch
+     *
+     * @return \core\Dict<mixed>
      */
     function arr_to_dict(string $type, array $data): \core\Dict
     {
@@ -517,6 +503,7 @@ if (!function_exists('vec_filter')) {
      * Result is always re-indexed as a list<T>.
      *
      * @template T
+     *
      * @param iterable<T>       $list      Any iterable
      * @param callable(T): bool $predicate Filter function
      *
@@ -535,7 +522,8 @@ if (!function_exists('vec_map')) {
      *
      * @template T
      * @template U
-     * @param iterable<T>  $list      Any iterable
+     *
+     * @param iterable<T>    $list      Any iterable
      * @param callable(T): U $transform Transform function
      *
      * @return list<U>
@@ -552,6 +540,7 @@ if (!function_exists('dict_filter')) {
      *
      * @template Tk of array-key
      * @template Tv
+     *
      * @param array<Tk, Tv>      $dict      Associative array
      * @param callable(Tv): bool $predicate Filter function (receives values)
      *
@@ -570,7 +559,8 @@ if (!function_exists('dict_map')) {
      * @template Tk of array-key
      * @template Tv
      * @template Tu
-     * @param array<Tk, Tv>   $dict      Associative array
+     *
+     * @param array<Tk, Tv>    $dict      Associative array
      * @param callable(Tv): Tu $transform Transform function
      *
      * @return array<Tk, Tu>

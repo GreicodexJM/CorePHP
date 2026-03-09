@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace core\Tests;
 
-use PHPUnit\Framework\TestCase;
 use core\StrictObject;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \core\StrictObject
- */
+#[CoversClass(\core\StrictObject::class)]
 final class StrictObjectTest extends TestCase
 {
     // -------------------------------------------------------------------------
@@ -18,7 +17,7 @@ final class StrictObjectTest extends TestCase
 
     private function makeStrictObject(): object
     {
-        return new class extends StrictObject {
+        return new class () extends StrictObject {
             public string $declared = 'hello';
         };
     }

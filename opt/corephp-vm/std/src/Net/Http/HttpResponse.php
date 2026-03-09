@@ -13,11 +13,11 @@ namespace core\Net\Http;
 final class HttpResponse
 {
     /**
-     * @param int                   $statusCode  HTTP status code (e.g. 200, 404)
-     * @param string                $body        The raw response body
-     * @param array<string, string> $headers     Response headers (name => value, lowercased names)
-     * @param string                $url         The final URL after redirects
-     * @param float                 $totalTime   Total request time in seconds
+     * @param int                   $statusCode HTTP status code (e.g. 200, 404)
+     * @param string                $body       The raw response body
+     * @param array<string, string> $headers    Response headers (name => value, lowercased names)
+     * @param string                $url        The final URL after redirects
+     * @param float                 $totalTime  Total request time in seconds
      */
     public function __construct(
         private readonly int    $statusCode,
@@ -85,7 +85,7 @@ final class HttpResponse
         $value = $this->header($name);
         if ($value === null) {
             throw new HttpException(
-                sprintf('Required response header "%s" is not present.', $name)
+                sprintf('Required response header "%s" is not present.', $name),
             );
         }
         return $value;

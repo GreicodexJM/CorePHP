@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace core\Engine;
 
-use core\Security\Exceptions\EncodingException;
-use core\Security\Exceptions\SecurityException;
-
 /**
- * FunctionOverrider — runkit7 Native Function Override Registry
+ * FunctionOverrider — runkit7 Native Function Override Registry.
  *
  * Replaces PHP's built-in functions that fail silently (returning false/null/0)
  * with versions that throw typed, named exceptions on any failure.
  *
- * Exception mapping (runkit7 override bodies → PSL exception classes):
- *   json_decode / json_encode    → \Psl\Json\Exception
+ * Exception mapping (runkit7 override bodies → exception classes):
+ *   json_decode / json_encode    → \JsonException (PHP built-in, via JSON_THROW_ON_ERROR)
  *   file_get_contents            → \Psl\File\Exception\RuntimeException
  *   file_put_contents            → \Psl\File\Exception\RuntimeException
  *   intval / floatval            → \Psl\Type\Exception\CoercionException
@@ -67,7 +64,7 @@ final class FunctionOverrider
     }
 
     // -------------------------------------------------------------------------
-    // JSON — throws \Psl\Json\Exception
+    // JSON — throws \JsonException (PHP built-in, via JSON_THROW_ON_ERROR)
     // -------------------------------------------------------------------------
 
     private static function overrideJsonDecode(): void
@@ -81,16 +78,8 @@ final class FunctionOverrider
             'string $json, bool $associative = false, int $depth = 512, int $flags = 0',
             '
             $flags = $flags | JSON_THROW_ON_ERROR;
-            try {
-                return \json_decode($json, $associative, $depth, $flags);
-            } catch (\JsonException $e) {
-                throw new \Psl\Json\Exception(
-                    "json_decode failed: " . $e->getMessage() . " — input: " . substr($json, 0, 100),
-                    (int) $e->getCode(),
-                    $e
-                );
-            }
-            '
+            return \json_decode($json, $associative, $depth, $flags);
+            ',
         );
         self::markInstalled('json_decode');
     }
@@ -106,22 +95,8 @@ final class FunctionOverrider
             'mixed $value, int $flags = 0, int $depth = 512',
             '
             $flags = $flags | JSON_THROW_ON_ERROR;
-            try {
-                $result = \json_encode($value, $flags, $depth);
-                if ($result === false) {
-                    throw new \Psl\Json\Exception(
-                        "json_encode returned false for value of type: " . get_debug_type($value)
-                    );
-                }
-                return $result;
-            } catch (\JsonException $e) {
-                throw new \Psl\Json\Exception(
-                    "json_encode failed: " . $e->getMessage(),
-                    (int) $e->getCode(),
-                    $e
-                );
-            }
-            '
+            return \json_encode($value, $flags, $depth);
+            ',
         );
         self::markInstalled('json_encode');
     }
@@ -157,7 +132,7 @@ final class FunctionOverrider
                 );
             }
             return $result;
-            '
+            ',
         );
         self::markInstalled('file_get_contents');
     }
@@ -179,7 +154,7 @@ final class FunctionOverrider
                 );
             }
             return $result;
-            '
+            ',
         );
         self::markInstalled('file_put_contents');
     }
@@ -214,7 +189,7 @@ final class FunctionOverrider
                 $value,
                 "int"
             );
-            '
+            ',
         );
         self::markInstalled('intval');
     }
@@ -239,7 +214,7 @@ final class FunctionOverrider
                 $value,
                 "float"
             );
-            '
+            ',
         );
         self::markInstalled('floatval');
     }
@@ -266,7 +241,7 @@ final class FunctionOverrider
                 );
             }
             return $result;
-            '
+            ',
         );
         self::markInstalled('preg_match');
     }
@@ -289,7 +264,7 @@ final class FunctionOverrider
                 );
             }
             return $result;
-            '
+            ',
         );
         self::markInstalled('preg_match_all');
     }
@@ -312,7 +287,7 @@ final class FunctionOverrider
                 );
             }
             return $result;
-            '
+            ',
         );
         self::markInstalled('preg_replace');
     }
@@ -341,7 +316,7 @@ final class FunctionOverrider
                 );
             }
             return $result;
-            '
+            ',
         );
         self::markInstalled('curl_exec');
     }
@@ -367,7 +342,7 @@ final class FunctionOverrider
                 );
             }
             return $result;
-            '
+            ',
         );
         self::markInstalled('base64_decode');
     }
@@ -395,7 +370,7 @@ final class FunctionOverrider
                     "unserialize() is permanently disabled in CorePHP. "
                     . "Use JSON, MessagePack, or a typed DTO instead."
                 );
-                '
+                ',
             );
             self::markInstalled('unserialize');
         } catch (\Throwable) {

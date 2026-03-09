@@ -35,8 +35,10 @@ use Psl\Vec;
  *   }
  *
  * @template T
+ *
  * @implements \ArrayAccess<int, T>
  * @implements \Iterator<int, T>
+ *
  * @phpstan-consistent-constructor
  */
 class TypedCollection implements \ArrayAccess, \Iterator, \Countable
@@ -75,7 +77,7 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
     {
         if (trim($type) === '') {
             throw new \InvalidArgumentException(
-                'TypedCollection: type must be a non-empty class name or primitive type string.'
+                'TypedCollection: type must be a non-empty class name or primitive type string.',
             );
         }
         $this->type = $type;
@@ -98,9 +100,9 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      * @param class-string<T>|string $type  Declared element type
      * @param array<mixed>           $items Plain PHP array
      *
-     * @return static<T>
-     *
      * @throws \InvalidArgumentException on the first element with the wrong type
+     *
+     * @return static<T>
      */
     public static function fromArray(string $type, array $items): static
     {
@@ -118,12 +120,12 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      * Example — wrapping an existing iterator:
      *   $col = TypedCollection::fromIterable(User::class, $pdo->fetchAll());
      *
-     * @param class-string<T>|string $type    Declared element type
-     * @param iterable<mixed>        $items   Any iterable source
-     *
-     * @return static<T>
+     * @param class-string<T>|string $type  Declared element type
+     * @param iterable<mixed>        $items Any iterable source
      *
      * @throws \InvalidArgumentException on the first element with the wrong type
+     *
+     * @return static<T>
      */
     public static function fromIterable(string $type, iterable $items): static
     {
@@ -160,9 +162,9 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      *
      * @param TypedCollection<T> $other
      *
-     * @return static<T>
-     *
      * @throws \InvalidArgumentException if the declared types differ
+     *
+     * @return static<T>
      */
     public function merge(self $other): static
     {
@@ -171,8 +173,8 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
                 sprintf(
                     'TypedCollection::merge() — type mismatch: cannot merge <%s> into <%s>.',
                     $other->getType(),
-                    $this->type
-                )
+                    $this->type,
+                ),
             );
         }
         /** @var static<T> $merged */
@@ -193,15 +195,16 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
     /**
      * Return the first element, or throw if the collection is empty.
      *
-     * @return T
      *
      * @throws \OutOfBoundsException if the collection is empty
+     *
+     * @return T
      */
     public function first(): mixed
     {
         if (empty($this->items)) {
             throw new \OutOfBoundsException(
-                sprintf('TypedCollection<%s>::first() called on an empty collection.', $this->type)
+                sprintf('TypedCollection<%s>::first() called on an empty collection.', $this->type),
             );
         }
         return $this->items[0];
@@ -210,15 +213,16 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
     /**
      * Return the last element, or throw if the collection is empty.
      *
-     * @return T
      *
      * @throws \OutOfBoundsException if the collection is empty
+     *
+     * @return T
      */
     public function last(): mixed
     {
         if (empty($this->items)) {
             throw new \OutOfBoundsException(
-                sprintf('TypedCollection<%s>::last() called on an empty collection.', $this->type)
+                sprintf('TypedCollection<%s>::last() called on an empty collection.', $this->type),
             );
         }
         return $this->items[count($this->items) - 1];
@@ -227,9 +231,10 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
     /**
      * Return the element at the given index, or throw if not found.
      *
-     * @return T
      *
      * @throws \OutOfBoundsException if the index is out of range
+     *
+     * @return T
      */
     public function get(int $index): mixed
     {
@@ -239,8 +244,8 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
                     'TypedCollection<%s>::get(%d) — index out of range (size: %d).',
                     $this->type,
                     $index,
-                    count($this->items)
-                )
+                    count($this->items),
+                ),
             );
         }
         return $this->items[$index];
@@ -331,6 +336,7 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      * Backed by Psl\Vec\map() internally; result is re-wrapped into a typed collection.
      *
      * @template U
+     *
      * @param callable(T): U         $transform
      * @param class-string<U>|string $outputType
      *
@@ -350,6 +356,7 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      * Reduce the collection to a single value.
      *
      * @template U
+     *
      * @param callable(U, T): U $callback
      * @param U                 $initial
      *
@@ -416,7 +423,7 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
     {
         if ($size < 1) {
             throw new \InvalidArgumentException(
-                sprintf('TypedCollection::chunk() — $size must be a positive integer, got %d.', $size)
+                sprintf('TypedCollection::chunk() — $size must be a positive integer, got %d.', $size),
             );
         }
         /** @var list<static<T>> $result */
@@ -448,9 +455,9 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
      */
     public function unique(): static
     {
-        $seen    = [];
+        $seen = [];
         /** @var static<T> $unique */
-        $unique  = new static($this->type);
+        $unique = new static($this->type);
         foreach ($this->items as $item) {
             $key = is_object($item) ? spl_object_id($item) : serialize($item);
             if (!isset($seen[$key])) {
@@ -490,8 +497,8 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
                     'TypedCollection<%s>: offset %s does not exist (collection has %d items).',
                     $this->type,
                     var_export($offset, true),
-                    count($this->items)
-                )
+                    count($this->items),
+                ),
             );
         }
         return $this->items[$offset];
@@ -557,7 +564,6 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
     /**
      * Assert that the given item matches the declared type.
      *
-     * @param mixed $item
      *
      * @throws \InvalidArgumentException if the type does not match
      */
@@ -568,7 +574,7 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
         // Check primitives first using get_debug_type() (works for null, scalars, etc.)
         if (in_array($this->type, self::PRIMITIVE_TYPES, true)) {
             $normalizedDeclared = $this->normalizePrimitive($this->type);
-            $normalizedActual   = $this->normalizePrimitive($actualType);
+            $normalizedActual = $this->normalizePrimitive($actualType);
 
             if ($normalizedDeclared !== $normalizedActual) {
                 throw new \InvalidArgumentException(
@@ -577,8 +583,8 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
                         $this->type,
                         $this->type,
                         $actualType,
-                        var_export($item, true)
-                    )
+                        var_export($item, true),
+                    ),
                 );
             }
             return;
@@ -591,8 +597,8 @@ class TypedCollection implements \ArrayAccess, \Iterator, \Countable
                     'TypedCollection<%s>: expected instance of %s, got %s.',
                     $this->type,
                     $this->type,
-                    $actualType
-                )
+                    $actualType,
+                ),
             );
         }
     }

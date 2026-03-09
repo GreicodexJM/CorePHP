@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace core\Tests;
 
-use PHPUnit\Framework\TestCase;
 use core\Internal\Array\TypedCollection;
 use core\Vec;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \core\Vec
- * @uses   \core\Internal\Array\TypedCollection
- */
+#[CoversClass(\core\Vec::class)]
+#[UsesClass(\core\Internal\Array\TypedCollection::class)]
 final class VecTest extends TestCase
 {
     public function testVecIsInstanceOfTypedCollection(): void
@@ -47,16 +47,16 @@ final class VecTest extends TestCase
 
     public function testVecFilterReturnsVecInstance(): void
     {
-        $vec      = Vec::fromArray('int', [1, 2, 3, 4]);
-        $filtered = $vec->filter(static fn(int $n): bool => $n > 2);
+        $vec = Vec::fromArray('int', [1, 2, 3, 4]);
+        $filtered = $vec->filter(static fn (int $n): bool => $n > 2);
         self::assertInstanceOf(Vec::class, $filtered);
         self::assertSame([3, 4], $filtered->toArray());
     }
 
     public function testVecMapReturnsVecInstance(): void
     {
-        $vec    = Vec::fromArray('int', [1, 2]);
-        $mapped = $vec->map(static fn(int $n): int => $n * 10, 'int');
+        $vec = Vec::fromArray('int', [1, 2]);
+        $mapped = $vec->map(static fn (int $n): int => $n * 10, 'int');
         self::assertInstanceOf(Vec::class, $mapped);
         self::assertSame([10, 20], $mapped->toArray());
     }
@@ -73,7 +73,7 @@ final class VecTest extends TestCase
 
     public function testVecArrayAccess(): void
     {
-        $vec   = new Vec('int');
+        $vec = new Vec('int');
         $vec[] = 10;
         $vec[] = 20;
         self::assertSame(10, $vec[0]);
@@ -82,7 +82,7 @@ final class VecTest extends TestCase
 
     public function testVecForeach(): void
     {
-        $vec    = Vec::fromArray('string', ['a', 'b', 'c']);
+        $vec = Vec::fromArray('string', ['a', 'b', 'c']);
         $result = [];
         foreach ($vec as $item) {
             $result[] = $item;
@@ -93,7 +93,7 @@ final class VecTest extends TestCase
     public function testVecToArrayRoundTrip(): void
     {
         $original = [1, 2, 3];
-        $vec      = Vec::fromArray('int', $original);
+        $vec = Vec::fromArray('int', $original);
         self::assertSame($original, $vec->toArray());
     }
 
