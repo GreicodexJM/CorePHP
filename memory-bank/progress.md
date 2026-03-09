@@ -130,6 +130,20 @@ Required GitHub Secrets:
 - ✅ **FunctionShimsTest.php** — 57 new tests covering all 25 shims
 - ✅ **TypedCollectionTest.php** — 15 new tests for PSL-backed methods
 
+## What Was Evaluated (2026-03-09 — PSL 5.0.0 Upgrade Assessment)
+
+- ⛔ **PSL 5.0.0 upgrade evaluated and deferred — hard blocker found**
+  - `php-standard-library/phpstan-extension ^2.0` explicitly conflicts with `azjezz/psl >= 5.0`
+  - No PSL 5.0.0-compatible phpstan extension version has been published
+  - Dropping the extension would reduce PHPStan type inference quality on a Level 9 project — not acceptable
+  - **Decision: Stay on `azjezz/psl ^4.2` until phpstan extension publishes PSL 5.x support**
+  - All other PSL 5.0.0 breaking changes were assessed as zero/low impact for CorePHP:
+    - PHP 8.4+ requirement ✅ already satisfied
+    - Networking stack rewrite ✅ CorePHP uses its own curl-based `HttpClient` — not affected
+    - Path canonicalization changes ⚠️ minor only
+  - Potential gains deferred: Vec/Dict/Type performance (up to 100%), `Psl\Crypto` (libsodium), `Psl\Process`
+  - **Action item:** Monitor `https://packagist.org/packages/php-standard-library/phpstan-extension` for a `^3.0` or `^2.x` release that supports PSL `^5.0`
+
 ## Evolution of Decisions
 - 2026-03-06: Project initialized from `docs/PROJECT.md`
 - 2026-03-06: Three Safety Pillars architecture finalized
@@ -149,3 +163,4 @@ Required GitHub Secrets:
 - 2026-03-06: FunctionShimsTest.php written (57 tests); IOTest updated to PSL exceptions
 - 2026-03-06: PSL upgraded from ^2.9 → ^4.2 (latest stable); WriteMode enum cases fixed (SCREAMING_SNAKE_CASE → PascalCase: OpenOrCreate, Append)
 - 2026-03-06: **Build fix** — `php:8.5-cli-alpine` → `php:8.4-cli-alpine` (runkit7 GitHub main incompatible with PHP 8.5 Zend API); 2 targeted sed patches applied to runkit7 for PHP 8.4 (`rebuild_object_properties` rename + `info.user.doc_comment` struct change); `bcmath` extension added (required by `azjezz/psl ^4.2`); `phpstan/phpstan ^1.11` → `^2.0` in std `require-dev` (required by `php-standard-library/phpstan-extension ^2.0`); composer.json PHP constraints updated to `^8.4`
+- 2026-03-09: **PSL 5.0.0 evaluated — upgrade deferred** — `php-standard-library/phpstan-extension ^2.0` explicitly conflicts with `azjezz/psl >= 5.0`; no compatible extension version published; staying on `^4.2` until phpstan extension adds PSL 5.x support

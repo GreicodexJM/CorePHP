@@ -158,6 +158,32 @@ All GOS-required documentation files created under `memory-bank/`.
 1. Fix RoadRunner worker.php crash (`WorkerAllocate: EOF` — likely missing spiral/roadrunner-worker in vendor)
 2. Add Prometheus metrics endpoint to `.rr.yaml`
 3. Consider adding `core\Database\Connection` wrapper (PDO → typed exceptions)
+4. **Monitor `php-standard-library/phpstan-extension` for PSL 5.0.0 support** — upgrade PSL once a compatible version is published (see PSL 5.0.0 Evaluation below)
+
+## PSL 5.0.0 Evaluation (2026-03-09) — ⛔ BLOCKED
+
+PSL 5.0.0 (`azjezz/psl ^5.0`) was evaluated for adoption. **Upgrade is currently blocked.**
+
+### What PSL 5.0.0 Offers
+- PHP 8.4+ requirement (✅ project already on `^8.4`)
+- Up to 100% performance improvements in `Vec`, `Dict`, `Str`, `Iter`, `Type` (all used by CorePHP)
+- New `Psl\Crypto` module (libsodium — highly relevant to `core\Security\`)
+- New `Psl\Process` for async process management
+- New `Psl\Terminal` / `Psl\Ansi` for terminal UI
+
+### Breaking Changes (vs. current `^4.2`)
+| Change | CorePHP Impact |
+|---|---|
+| PHP 8.4+ minimum | ✅ No impact — already on `^8.4` |
+| Full `Psl\Network` / `Psl\TCP` / `Psl\Unix` rewrite | ✅ No impact — CorePHP uses curl-based `HttpClient`, not PSL networking |
+| `Psl\Env\temp_dir()` canonicalization | ⚠️ Minor — path string format may differ |
+| `Filesystem\create_temporary_file()` canonicalization | ⚠️ Minor — path string format may differ |
+| PHPUnit 13 (dev dependency of PSL itself) | ✅ No impact — CorePHP's PHPUnit is independent |
+
+### ⛔ Hard Blocker
+`php-standard-library/phpstan-extension ^2.0` (currently in `require-dev`) **explicitly conflicts with `azjezz/psl >= 5.0`** and no PSL 5.0.0-compatible version has been published.
+
+Dropping the extension would degrade PHPStan type inference for PSL generics — unacceptable on a Level 9 project. **Do not upgrade until a compatible extension release is available.**
 
 ## Key Technical Decisions (Final)
 - runkit7 for native function override at boot-time (intercepted from ALL code including vendor)
