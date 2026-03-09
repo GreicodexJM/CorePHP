@@ -94,3 +94,18 @@ jobs:
       - name: Image digest
         if: github.event_name != 'pull_request'
         run: echo "Pushed digest ${{ steps.build-and-push.outputs.digest }}"
+
+      # -------------------------------------------------------------------------
+      # 7. Sync DOCKERHUB_README.md → Docker Hub repository description
+      #    Runs only on actual pushes (not PRs). Uses the same credentials
+      #    already required by step 4 (docker/login-action).
+      # -------------------------------------------------------------------------
+      - name: Update Docker Hub description
+        if: github.event_name != 'pull_request'
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: greicodex/corephp-vm
+          readme-filepath: ./DOCKERHUB_README.md
+          short-description: "Persistent, hardened PHP 8.4 runtime — RoadRunner + typed std library. Zero silent failures."

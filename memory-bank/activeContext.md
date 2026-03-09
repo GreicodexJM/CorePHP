@@ -3,6 +3,17 @@
 ## Current Status
 🟢 **All quality gates passing** — PHPStan Level 9 (`[OK] No errors`), PHPUnit (`OK 208 tests, 271 assertions`), CS-Fixer (`0 violations`)
 🟢 **Docker build regression fixed** — GitHub Actions `docker push` was failing with exit code 255 on `composer update`; root cause identified and patched.
+🟢 **Docker Hub README automation added** — `DOCKERHUB_README.md` synced to Docker Hub on every push via `peter-evans/dockerhub-description@v4`.
+
+## Last Session (2026-03-09 — Docker Hub README)
+
+### What Was Done
+Added automated Docker Hub README synchronization so the `greicodex/corephp-vm` repository page on Docker Hub always reflects the latest documentation.
+
+**Files created/modified:**
+- `DOCKERHUB_README.md` — Docker Hub-optimized copy of the project README; uses absolute `https://raw.githubusercontent.com/` URLs for images (relative paths break on Docker Hub), removes GitHub-only relative links, retains all content sections (pull instructions, architecture, quick start, std library, security hardening, shared hosting mode, source links)
+- `.github/workflows/docker-publish.yml` — Added step 7 (`peter-evans/dockerhub-description@v4`) after the build-and-push step; fires on all non-PR pushes (both `main` and version tags); reuses existing `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` secrets; sets `short-description` to "Persistent, hardened PHP 8.4 runtime — RoadRunner + typed std library. Zero silent failures."
+- `Makefile` — Added `make dockerhub-readme` target for manual one-off pushes without CI (uses `peterevans/dockerhub-description:latest` container; requires `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` env vars)
 
 ## Last Session (2026-03-09 — Docker Build Regression Fix)
 

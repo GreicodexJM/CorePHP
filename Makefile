@@ -104,6 +104,21 @@ rr-start: ## Start the RoadRunner worker (foreground)
 # Release — semantic versioning via git tags
 # ---------------------------------------------------------------------------
 
+dockerhub-readme: ## Push DOCKERHUB_README.md to Docker Hub (requires DOCKERHUB_USERNAME and DOCKERHUB_TOKEN env vars)
+ifndef DOCKERHUB_USERNAME
+	$(error DOCKERHUB_USERNAME is required. Export it before running: export DOCKERHUB_USERNAME=greicodex)
+endif
+ifndef DOCKERHUB_TOKEN
+	$(error DOCKERHUB_TOKEN is required. Export it before running: export DOCKERHUB_TOKEN=<your-token>)
+endif
+	@echo "→ Pushing DOCKERHUB_README.md to Docker Hub..."
+	docker run --rm \
+	  -e DOCKERHUB_USERNAME=$(DOCKERHUB_USERNAME) \
+	  -e DOCKERHUB_PASSWORD=$(DOCKERHUB_TOKEN) \
+	  -v $(PWD)/DOCKERHUB_README.md:/workspace/README.md:ro \
+	  peterevans/dockerhub-description:latest
+	@echo "✓ Docker Hub description updated"
+
 tag: ## Create and push a semver git tag  →  make tag VERSION=1.0.0
 ifndef VERSION
 	$(error VERSION is required. Usage: make tag VERSION=1.2.3)
