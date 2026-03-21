@@ -7,7 +7,7 @@
 #   FROM corephp-vm:latest   ← in your project's Dockerfile
 # =============================================================================
 
-FROM php:8.4-cli-alpine AS base
+FROM php:8.5-cli-alpine AS base
 
 LABEL maintainer="CorePHP"
 LABEL description="CorePHP: Persistent, hardened PHP 8.4 runtime with RoadRunner"
