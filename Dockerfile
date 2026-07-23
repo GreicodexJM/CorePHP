@@ -11,7 +11,7 @@ FROM php:8.4-cli-alpine AS base
 
 LABEL maintainer="CorePHP"
 LABEL description="CorePHP: Persistent, hardened PHP 8.4 runtime with RoadRunner"
-LABEL version="2.0.0"
+LABEL version="1.0.0"
 
 # ---------------------------------------------------------------------------
 # System dependencies
