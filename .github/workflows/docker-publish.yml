@@ -73,7 +73,9 @@ jobs:
 
       # -------------------------------------------------------------------------
       # 5. Build & Push
-      #    - Platform: linux/arm64 only
+      #    - Platform: linux/amd64 + linux/arm64 (multi-arch manifest).
+      #      amd64 is REQUIRED — most servers/CI/desktops are amd64; an arm64-only
+      #      image fails `docker pull` with "no matching manifest for linux/amd64".
       #    - Cache: GitHub Actions cache (free, zero config)
       #    - Push: only on non-PR events
       # -------------------------------------------------------------------------
@@ -81,7 +83,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags:   ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
