@@ -12,9 +12,12 @@ declare(strict_types=1);
  *   1. Convert ALL PHP errors/warnings/notices into ErrorException (no silent failures)
  *   2. Register a global uncaught Throwable handler for audit logging
  *   3. Initialize the Monolog global audit logger
- *   4. Install runkit7 native function overrides via FunctionOverrider
- *   5. Register global class aliases (ArrayList, BaseObject, Dict, Safe)
+ *   4. Register global class aliases (ArrayList, BaseObject, Dict, IO)
  *      so JVM-style classes are available without `use` statements
+ *
+ * NOTE: CorePHP does not transparently override native functions (the runkit7
+ * Layer-2 mechanism was removed — it segfaulted on PHP 8.4). Safety comes from
+ * the error handler here, the pure-PHP s_*() shims, disable_functions, and PHPStan.
  */
 
 // ---------------------------------------------------------------------------
@@ -86,16 +89,22 @@ set_exception_handler(
 );
 
 // ---------------------------------------------------------------------------
-// 4. FUNCTION OVERRIDER — Install runkit7 native function overrides
-//    Replaces PHP's silent-failure built-ins with exception-throwing versions.
-//    Only runs if runkit7 extension is loaded (Docker/VPS mode).
+// SAFE FUNCTIONS — pure-PHP, no engine hacks
+//
+//    CorePHP does NOT transparently override native functions. (The old runkit7
+//    Layer-2 override was removed — the unofficial PHP 8.4 build segfaulted the
+//    process at shutdown on any internal-function redefine.) Instead, SAFE
+//    behaviour comes from:
+//      - the Layer-3 error handler above (warnings/notices → ErrorException),
+//      - the pure-PHP s_*() shims + azjezz/psl (typed, throwing safe API),
+//      - dangerous primitives disabled in php.ini (disable_functions),
+//      - PHPStan Level 9 (static enforcement).
+//    Use s_json()/s_file()/s_int()/s_b64()/s_replace()/... instead of the raw
+//    native functions, which still fail silently.
 // ---------------------------------------------------------------------------
-if (extension_loaded('runkit7') && class_exists(\core\Engine\FunctionOverrider::class)) {
-    \core\Engine\FunctionOverrider::install();
-}
 
 // ---------------------------------------------------------------------------
-// 5. GLOBAL CLASS ALIASES — JVM-style imports
+// 4. GLOBAL CLASS ALIASES — JVM-style imports
 //
 //    Register short, global aliases for the most common core classes so they
 //    are available in ANY file without a `use` statement.

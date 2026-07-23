@@ -162,7 +162,7 @@ final class HttpClient
                 return strlen($headerLine);
             });
 
-            // Execute — curl_exec is overridden by FunctionOverrider to throw HttpException on false
+            // Execute — curl_exec returns false on failure; we check and throw below.
             $rawBody = \curl_exec($handle);
 
             if ($rawBody === false) {

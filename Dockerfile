@@ -1,6 +1,6 @@
 # =============================================================================
 # CorePHP — Base Docker Image
-# PHP 8.4 CLI (Alpine) + RoadRunner + runkit7 + hardened php.ini
+# PHP 8.4 CLI (Alpine) + RoadRunner + hardened php.ini + safe std library
 # =============================================================================
 # Usage:
 #   docker build -t corephp-vm:latest .
@@ -23,38 +23,22 @@ RUN apk add --no-cache \
         oniguruma \
     && apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
-        git \
         curl-dev \
         icu-dev \
         libzip-dev \
         oniguruma-dev \
+        linux-headers \
     # Install PHP extensions
     # Note: curl is already bundled in php:8.4-cli-alpine; do not reinstall
+    # Note: ext-sockets is REQUIRED by spiral/roadrunner-worker; without it the
+    #       root `composer update` fails and /app/vendor never ships → every
+    #       RoadRunner worker dies at startup. It needs linux-headers to compile.
     && docker-php-ext-install -j$(nproc) \
         bcmath \
         intl \
         zip \
         mbstring \
-    # ---------------------------------------------------------------------------
-    # Install runkit7 from GitHub source
-    # (PECL registry does not carry runkit7; must build from source)
-    # runkit.internal_override = 1 in php.ini is required to override built-ins
-    # ---------------------------------------------------------------------------
-    && git clone --depth=1 https://github.com/runkit7/runkit7.git /tmp/runkit7 \
-    # PHP 8.4 compat patches for runkit7:
-    # 1. rebuild_object_properties() was renamed in PHP 8.4
-    && sed -i 's/rebuild_object_properties(/rebuild_object_properties_internal(/g' \
-           /tmp/runkit7/runkit_props.c \
-    # 2. doc_comment moved from info.user sub-struct to direct field in PHP 8.4
-    && sed -i 's/info\.user\.doc_comment/doc_comment/g' \
-           /tmp/runkit7/runkit_classes.c \
-    && cd /tmp/runkit7 \
-    && phpize \
-    && ./configure \
-    && make -j$(nproc) \
-    && make install \
-    && docker-php-ext-enable runkit7 \
-    && rm -rf /tmp/runkit7 \
+        sockets \
     # Clean up build deps to minimize image size
     && apk del .build-deps \
     && rm -rf /tmp/pear
@@ -67,9 +51,15 @@ ARG RR_VERSION=2024.1.5
 # Declaring it here activates the injection (values: amd64, arm64, etc.).
 # RoadRunner release filenames match Docker's TARGETARCH values exactly.
 ARG TARGETARCH
-RUN mkdir -p /tmp/rr-extract \
+# TARGETARCH is only auto-populated by BuildKit (docker buildx / CI with
+# --platform). Under the classic builder (`docker build` without BuildKit) it is
+# empty, which produced a `...linux-.tar.gz` 404 and broke `make build` locally.
+# Fall back to deriving the arch from `uname -m` so both builders work.
+RUN ARCH="${TARGETARCH:-$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/')}" \
+    && echo "RoadRunner arch: ${ARCH}" \
+    && mkdir -p /tmp/rr-extract \
     && curl -sSfL \
-    "https://github.com/roadrunner-server/roadrunner/releases/download/v${RR_VERSION}/roadrunner-${RR_VERSION}-linux-${TARGETARCH}.tar.gz" \
+    "https://github.com/roadrunner-server/roadrunner/releases/download/v${RR_VERSION}/roadrunner-${RR_VERSION}-linux-${ARCH}.tar.gz" \
     -o /tmp/rr.tar.gz \
     && tar -xzf /tmp/rr.tar.gz -C /tmp/rr-extract --strip-components=1 \
     && mv /tmp/rr-extract/rr /usr/local/bin/rr \
@@ -103,8 +93,15 @@ RUN cd /opt/corephp-vm/std \
 # ---------------------------------------------------------------------------
 WORKDIR /app
 COPY composer.json composer.lock* ./
-RUN php -d auto_prepend_file="" -d disable_functions="" /usr/local/bin/composer install \
-    --no-dev --optimize-autoloader --no-interaction 2>/dev/null || true
+# Use `composer update` (not install): there is no committed root composer.lock,
+# so `install` has nothing to install from and would leave /app/vendor empty —
+# which crashed every RoadRunner worker at startup (worker.php requires
+# /app/vendor/autoload.php). `update` resolves straight from composer.json, the
+# same pattern used for the std library above.
+# NOTE: the failure is intentionally NOT swallowed — a build that cannot install
+# the RoadRunner runtime must fail loudly, not ship a broken image.
+RUN php -d auto_prepend_file="" -d disable_functions="" /usr/local/bin/composer update \
+    --no-dev --optimize-autoloader --no-interaction
 
 COPY . .
 

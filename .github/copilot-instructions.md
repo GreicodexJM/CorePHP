@@ -33,8 +33,8 @@ All commands run **inside Docker**. Never run `php` or `composer` directly on th
 | Layer | Mechanism | When |
 |---|---|---|
 | Static | PHPStan Level 9 + PHP-CS-Fixer | CI |
-| Boot | `runkit7` `FunctionOverrider` | Process startup |
-| Runtime | `bootstrap.php` error handler | Every request |
+| Safe API | pure-PHP `s_*()` shims + PSL | wherever called |
+| Runtime | `bootstrap.php` error handler (warnings → exceptions) | Every request |
 
 ### Namespace Tree
 ```
@@ -43,7 +43,6 @@ core\StrictObject                — Undefined property guard
 core\Vec                         — Typed sequential list
 core\Dict                        — Typed key-value store
 core\IO                          — File + HTTP facade
-core\Engine\FunctionOverrider    — runkit7 boot installer
 core\Internal\Array\TypedCollection — Type-safe base collection
 core\Net\Http\HttpClient         — curl HTTP client
 core\Net\Http\HttpResponse       — Immutable response VO

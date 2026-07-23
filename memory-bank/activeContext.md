@@ -60,7 +60,11 @@ Three Safety Pillars:
 3. **azjezz/psl ^4.2** — typed JSON, File, Regex, Type coercion; locked due to phpstan-extension incompatibility with PSL 5.x
 
 ## Known Open Issue
-- RoadRunner `WorkerAllocate: EOF` in `docker compose up` — `spiral/roadrunner-worker` missing from vendor. Run `make shell` then `composer install` to fix.
+- ✅ **RESOLVED (2026-07-23):** RoadRunner worker crash. Was four chained bugs (missing `ext-sockets`,
+  swallowed `composer install`, `getmypid` in `disable_functions`, compose bind-mount shadowing
+  `/app/vendor`). The worker now serves HTTP end-to-end. See `progress.md` and CLAUDE.md Known Issues.
+  runkit7 Layer-2 override is now off by default (segfaults on PHP 8.4); opt in with
+  `COREPHP_ENABLE_RUNKIT_OVERRIDE=1`.
 
 ## Last Session Update (2026-03-09 — Docs cleanup)
 

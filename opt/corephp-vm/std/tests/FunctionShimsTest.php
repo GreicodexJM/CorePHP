@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace core\Tests;
 
+use core\Security\Exceptions\EncodingException;
 use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 use Psl\File\Exception\NotFoundException as FileNotFoundException;
 use Psl\File\Exception\RuntimeException as FileException;
 use Psl\Json\Exception\DecodeException as JsonDecodeException;
 use Psl\Json\Exception\EncodeException as JsonEncodeException;
+use Psl\Regex\Exception\ExceptionInterface as RegexException;
 use Psl\Type\Exception\CoercionException;
 
 /** Tests for all global PSL-backed function shims defined in functions.php. */
@@ -26,6 +28,8 @@ use Psl\Type\Exception\CoercionException;
 #[CoversFunction('s_match')]
 #[CoversFunction('s_regex')]
 #[CoversFunction('s_regex_all')]
+#[CoversFunction('s_replace')]
+#[CoversFunction('s_b64')]
 #[CoversFunction('s_env')]
 #[CoversFunction('s_env_or')]
 #[CoversFunction('arr_to_list')]
@@ -453,5 +457,46 @@ final class FunctionShimsTest extends TestCase
     public function testDictMergeWithNoArgsReturnsEmptyArray(): void
     {
         self::assertSame([], dict_merge());
+    }
+
+    // -------------------------------------------------------------------------
+    // s_replace — safe preg_replace
+    // -------------------------------------------------------------------------
+
+    public function testReplaceSubstitutesMatches(): void
+    {
+        self::assertSame('a-b-c', s_replace('/\s+/', '-', 'a b  c'));
+    }
+
+    public function testReplaceReturnsSubjectWhenNoMatch(): void
+    {
+        self::assertSame('hello', s_replace('/\d+/', 'X', 'hello'));
+    }
+
+    public function testReplaceThrowsOnInvalidPattern(): void
+    {
+        $this->expectException(RegexException::class);
+        s_replace('/(unterminated', 'x', 'subject');
+    }
+
+    // -------------------------------------------------------------------------
+    // s_b64 — safe base64_decode (strict)
+    // -------------------------------------------------------------------------
+
+    public function testB64DecodesValidInput(): void
+    {
+        self::assertSame('CorePHP', s_b64(base64_encode('CorePHP')));
+    }
+
+    public function testB64RoundTripBinary(): void
+    {
+        $bytes = "\x00\x01\xff\xfe";
+        self::assertSame($bytes, s_b64(base64_encode($bytes)));
+    }
+
+    public function testB64ThrowsOnInvalidInput(): void
+    {
+        $this->expectException(EncodingException::class);
+        s_b64('!!!not-valid-base64!!!');
     }
 }

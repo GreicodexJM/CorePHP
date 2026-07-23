@@ -41,9 +41,6 @@ core\
 │   ├── HttpResponse                — Immutable response value object
 │   └── HttpException
 │
-├── Engine\
-│   └── FunctionOverrider           — runkit7 override installer (boot-time)
-│
 └── Internal\Array\
     └── TypedCollection             — Base class for Vec
 

@@ -124,7 +124,6 @@ core\Net\Http\HttpClient  — curl wrapper (all errors → HttpException)
 core\Net\Http\HttpResponse— Immutable response VO
 core\Net\Http\HttpException
 core\Internal\Array\TypedCollection — Base collection (extended by Vec)
-core\Engine\FunctionOverrider — runkit7 boot installer (call install() once)
 ```
 
 ### Exception Types
@@ -147,7 +146,7 @@ Psl\Regex\Exception\RuntimeException          (regex)
 opt/corephp-vm/std/src/       — All std library source code
 opt/corephp-vm/std/tests/     — All PHPUnit tests (mirrors src/ structure)
 opt/corephp-vm/bootstrap.php  — Boot sandbox (auto_prepend_file)
-config/php.ini                — PHP hardening (disable_functions, runkit)
+config/php.ini                — PHP hardening (disable_functions, opcache)
 .rr.yaml                      — RoadRunner config
 worker.php                    — PSR-7 request loop
 ci/lint.sh                    — CI lint runner
@@ -160,9 +159,9 @@ docs/std/                     — std library docs (7 markdown files)
 
 ## known issues
 
-1. **RoadRunner `WorkerAllocate: EOF`** in `docker compose up` — `spiral/roadrunner-worker` missing from vendor. Run `make shell` then `composer install`.
+1. **RoadRunner worker crash — RESOLVED (2026-07-23).** Was four chained bugs (missing `ext-sockets`, swallowed `composer` step, `getmypid` in `disable_functions`, compose mount shadowing `/app/vendor`). See CLAUDE.md Known Issues.
 2. **`eval()`** is a language construct — cannot be blocked in `php.ini`. PHPStan catches usage statically. Never use it.
-3. **runkit7** must be built from GitHub source — not available in PECL registry for Alpine/PHP 8.4.
+3. **No transparent native-function override.** runkit7 was removed (segfaulted on PHP 8.4). Use the pure-PHP `s_*()` shims / PSL for safe I/O; native functions still fail silently.
 
 ---
 

@@ -7,7 +7,7 @@
 | Runtime | PHP CLI | 8.5 |
 | Base OS | Alpine Linux | 3.21+ |
 | App Server | RoadRunner | 2024.1+ |
-| Function Override | runkit7 (PECL) | 4.0.0a6+ |
+| Safe API | pure-PHP `s_*` shims + azjezz/psl | ^4.2 |
 | Package Manager | Composer | 2.x |
 | Logging | Monolog | 3.x |
 | HTTP PSR | spiral/roadrunner-http | 3.x |
@@ -43,11 +43,18 @@ make build
 
 ## Technical Constraints
 
-### runkit7 Constraints
-- Requires `runkit.internal_override = 1` in `php.ini` to override built-ins
-- `runkit7_function_redefine()` cannot override language constructs (`eval`, `echo`, `include`)
-- Must be installed as PECL extension; not available in `pecl install` for all Alpine versions — use `--build-arg` for version pinning
-- The `runkit7-alpha` tag is the current stable release name on PECL
+### Safety mechanism (runkit7 removed — 2026-07-23)
+- CorePHP does **not** transparently override native functions. runkit7 was removed: its unofficial
+  PHP 8.4 build segfaulted the process at shutdown on any internal-function redefine, and the approach
+  (mutating the engine function table) is inherently fragile.
+- SAFE behaviour is delivered in pure PHP, which is portable and stable:
+  - pure-PHP `s_*()` shims + azjezz/psl (typed, throwing safe API),
+  - the `bootstrap.php` error handler (warnings/notices → `ErrorException`, transparent),
+  - dangerous primitives disabled in `php.ini` (`disable_functions`),
+  - PHPStan Level 9 (static enforcement).
+- Evaluated alternatives (uopz, purpose-built `zend_execute_internal` C extension, php-src fork) —
+  deferred in favour of the userland approach for portability/stability. A forked/patched PHP was
+  explicitly rejected (security-rebase burden; breaks the "it's still standard PHP" promise).
 
 ### RoadRunner Constraints
 - Binary downloaded at Docker build time from GitHub releases

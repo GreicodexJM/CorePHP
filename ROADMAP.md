@@ -67,10 +67,11 @@ Already shipped and green:
 - ✅ Image builds and publishes to Docker Hub (`greicodex/corephp-vm`) via CI/CD, multi-arch aware, with auto-synced README.
 - ✅ Boot-time override engine (runkit7) that redefines native footgun functions to throw instead of silently failing.
 - ✅ Hardened `php.ini` — 34 dangerous functions disabled, sandbox `auto_prepend_file` bootstrap.
-- ✅ Typed, PSL-backed helper library (`core\` namespace) + 25 global `s_*` shims — **opt-in**.
-- ✅ 208 unit tests passing, PHPStan Level 9 clean, PHP-CS-Fixer enforced.
+- ✅ Typed, PSL-backed helper library (`core\` namespace) + global `s_*` shims (pure-PHP safe replacements).
+- ✅ 214 unit tests passing, PHPStan Level 9 clean, PHP-CS-Fixer enforced.
 - ✅ Full documentation site and migration guide.
-- ⚠️ **Known blocker (top of Q3):** the persistent RoadRunner worker crashes in `docker compose up` (`WorkerAllocate: EOF`). The STABLE pillar isn't verified end-to-end until this is fixed — it gates the 1.0 launch.
+- ✅ **Persistent RoadRunner worker serves HTTP end-to-end** (`/health` → 200, worker pool stable). The STABLE pillar is verified.
+- ✅ **runkit7 removed.** SAFE is delivered the portable, stable way — pure-PHP `s_*` shims + PSL + the boot error handler (warnings/notices → exceptions) + PHPStan — with no engine-patching C extension. (The transparent runkit override segfaulted on PHP 8.4; userland was chosen for portability and stability.)
 
 Legend: ✅ done · 🚧 in progress · ⏳ planned
 
@@ -80,7 +81,7 @@ Legend: ✅ done · 🚧 in progress · ⏳ planned
 
 **Goal:** the drop-in stability promise is *demonstrably* real before we tell the world.
 
-- 🚧 **Fix the RoadRunner worker crash.** Verified, reproducible persistent request loop. *(Hard gate for launch.)*
+- ✅ **Fix the RoadRunner worker crash.** Done — verified persistent request loop (`/health` → 200, stable worker pool). Root cause was four chained silent failures (missing `ext-sockets`, swallowed `composer` step, `getmypid` wrongly in `disable_functions`, compose mount shadowing vendor); runkit7 removed in the process.
 - ⏳ **Drop-in proof.** Take an unmodified real-world PHP app, run it on CorePHP, and show it surviving fatals and leaks that produce untraceable 500s on PHP-FPM.
 - ⏳ **Happy-path compatibility test suite.** Automated parity proof: identical return values to vanilla PHP across the overridden surface, on success.
 - ⏳ **Reproducible benchmark.** Cold-start vs. persistent latency, published with the harness so anyone can rerun it.

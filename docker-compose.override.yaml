@@ -14,6 +14,8 @@ services:
     # Writable mount in development
     volumes:
       - ./:/app:rw
+      # Keep the image's baked-in /app/vendor (see docker-compose.yaml).
+      - /app/vendor
     environment:
       - APP_ENV=development
       - LOG_LEVEL=debug

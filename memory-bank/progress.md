@@ -141,11 +141,33 @@ Required GitHub Secrets:
 - **`Makefile`** — added `make ci-check` target (runs `ci-test` + `ci-lint` in sequence without compose)
 - **`Makefile`** — added `make ci-test` and `make ci-lint` standalone targets (both added in previous session)
 
-## What's Left to Build
-- [ ] Fix RoadRunner worker.php crash (`WorkerAllocate: EOF` in Docker compose — likely missing roadrunner-worker package in vendor)
+## What Was Fixed (2026-07-23 — RoadRunner worker crash RESOLVED)
+
+The persistent worker finally runs: `/health` → `{"status":"ok"}`, 4 workers `ready`, 208 tests green,
+stable across both the production and dev compose paths. The "one" crash was **four chained bugs**, each
+found by systematic debugging (not the memory-bank's earlier "missing vendor" guess):
+
+1. **`ext-sockets` missing** — `spiral/roadrunner-worker` requires it; without it the root `composer`
+   step aborted and `/app/vendor` never shipped. Fix: add `sockets` + `linux-headers` to the Dockerfile.
+2. **Root `composer install` couldn't work** — no committed root lock, and the failure was swallowed by
+   `2>/dev/null || true`. Fix: `composer update` (resolves from composer.json) with the error-swallow removed.
+3. **`getmypid()` in `disable_functions`** — RoadRunner's handshake calls it to send the worker PID
+   (`Worker.php` sendProcessId). Disabled → `undefined function` → catch-all masked it as a generic 500 →
+   RR reported the opaque `WorkerAllocate: no CONTROL flag`. Fix: remove `getmypid`/`getmyuid`/`getmygid`
+   (and the pointless `serialize` block) from `config/php.ini`.
+4. **Compose `./:/app` bind mount shadowed the image's `/app/vendor`** with the host tree (no vendor). Fix:
+   drop the mount from the production compose; dev override keeps a `/app/vendor` anonymous volume.
+
+Also: **runkit7 Layer-2 override disabled by default** — the PHP-8.4 runkit7 build segfaults at shutdown on
+any internal-function redefine (proven: trivial body, uncalled, opcache on/off), and `FunctionOverrider`
+additionally self-recursed. Gated behind `COREPHP_ENABLE_RUNKIT_OVERRIDE=1` (experimental). SAFE now comes
+from `s_*()` + PSL + the Layer-3 error handler + PHPStan. Also hardened the RR binary download to derive the
+arch from `uname` when BuildKit's `TARGETARCH` is unset (fixes `make build` under the classic builder).
 
 ## Current Status
-🟢 **FULLY COMPLETE** — Image builds, all source files generated, all 155 unit tests passing, full documentation written.
+🟢 **RUNTIME WORKING** — Image builds, persistent RoadRunner worker serves HTTP, all 208 unit tests passing,
+full documentation written. Layer 2 (transparent native override) intentionally off pending a stable PHP 8.4
+override mechanism.
 
 ## Known Issues / Design Notes
 - `eval()` is a language construct and cannot be blocked in php.ini; PHPStan covers statically

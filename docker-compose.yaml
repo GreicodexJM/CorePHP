@@ -12,8 +12,10 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
-    volumes:
-      - ./:/app:ro
+    # Production runs the image as-built: /app (worker.php, .rr.yaml, vendor,
+    # std library) all come from the image. Do NOT bind-mount host source over
+    # /app here — that would shadow the baked-in vendor and crash the workers.
+    # Live source mounting is a development concern; see docker-compose.override.yaml.
     working_dir: /app
     command: ["rr", "serve", "-c", "/app/.rr.yaml"]
     healthcheck:

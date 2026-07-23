@@ -31,6 +31,10 @@ declare(strict_types=1);
  *   s_match($pat, $sub)    — Bool regex match   → Psl\Regex\matches()
  *   s_regex($pat, $sub)    — First match groups → Psl\Regex\first_match()
  *   s_regex_all($p, $sub)  — All match groups   → Psl\Regex\every_match()
+ *   s_replace($p, $r, $s)  — Safe preg_replace  → Psl\Regex\replace()
+ *
+ * Encoding:
+ *   s_b64($encoded)        — Safe base64_decode → throws EncodingException on invalid
  *
  * Environment:
  *   s_env($key)            — Safe env var       → Psl\Env\get_var() or throw
@@ -323,6 +327,54 @@ if (!function_exists('s_regex_all')) {
     {
         // every_match() returns null when there are no matches; normalise to []
         return Regex\every_match($subject, $pattern) ?? [];
+    }
+}
+
+if (!function_exists('s_replace')) {
+    /**
+     * Safely replace all matches of a pattern in a subject string.
+     * Drop-in replacement for preg_replace() that throws instead of returning
+     * null on a PCRE error (e.g. an invalid or unterminated pattern).
+     *
+     * @param non-empty-string $pattern     PCRE pattern
+     * @param string           $replacement Replacement string
+     * @param string           $subject     String to operate on
+     *
+     * @throws \Psl\Regex\Exception\ExceptionInterface on invalid pattern / PCRE error
+     *
+     * @return string The subject with all matches replaced
+     */
+    function s_replace(string $pattern, string $replacement, string $subject): string
+    {
+        return Regex\replace($subject, $pattern, $replacement);
+    }
+}
+
+// =============================================================================
+// Encoding — safe base64 (pure-PHP replacement for base64_decode)
+// =============================================================================
+
+if (!function_exists('s_b64')) {
+    /**
+     * Safely decode a base64 string in strict mode.
+     * Drop-in replacement for base64_decode() that throws instead of silently
+     * returning false (non-strict) or partial garbage on invalid input.
+     *
+     * @param string $encoded The base64-encoded string
+     *
+     * @throws \core\Security\Exceptions\EncodingException on invalid base64 input
+     *
+     * @return string The decoded bytes
+     */
+    function s_b64(string $encoded): string
+    {
+        $decoded = \base64_decode($encoded, true);
+        if ($decoded === false) {
+            throw new \core\Security\Exceptions\EncodingException(
+                's_b64: invalid base64 input (strict mode). Input length: ' . strlen($encoded),
+            );
+        }
+        return $decoded;
     }
 }
 

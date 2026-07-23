@@ -51,13 +51,12 @@ COPY . /app
 │    └── worker.php (long-lived PHP process)      │
 │          └── bootstrap.php (auto_prepend_file)  │
 │                ├── Error handler → ErrorException│
-│                ├── FunctionOverrider (runkit7)  │
+│                ├── s_*() safe shims + PSL        │
 │                └── StrictObject                 │
 │                                                 │
 │  php.ini hardening                              │
 │    ├── disable_functions (unserialize, exec...) │
-│    ├── allow_url_fopen = Off                    │
-│    └── runkit.internal_override = 1             │
+│    └── allow_url_fopen = Off                    │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -66,8 +65,8 @@ COPY . /app
 | Layer | Mechanism | When |
 |---|---|---|
 | **Static** | PHPStan Level 9 + PHP-CS-Fixer | CI / pre-commit |
-| **Boot** | runkit7 `FunctionOverrider` | Once at process startup |
-| **Runtime** | `bootstrap.php` error handler | Every request |
+| **Safe API** | pure-PHP `s_*()` shims + PSL (typed, throwing) | Wherever you call them |
+| **Runtime** | `bootstrap.php` error handler (warnings/notices → exceptions) | Every request |
 
 ---
 
@@ -117,7 +116,6 @@ If you cannot use Docker (shared hosting, cPanel, Plesk), you can use a subset o
 | Feature | Docker + RoadRunner | Shared Hosting (.user.ini) |
 |---|---|---|
 | Persistent process | ✅ | ❌ (restarts per request) |
-| runkit7 overrides | ✅ | ❌ (extension not available) |
 | bootstrap.php sandbox | ✅ | ✅ |
 | StrictObject | ✅ | ✅ |
 | Global `s_*()` shims | ✅ | ✅ |
@@ -230,22 +228,27 @@ posix_kill, posix_setuid, posix_setgid, dl, phpinfo,
 symlink, link, putenv, ini_set, ini_restore, show_source, highlight_file
 ```
 
-### runkit7 Native Function Overrides (boot-time)
+### Safe Function Replacements (pure PHP)
 
-The following native PHP functions are **replaced at process startup** with versions that throw typed exceptions:
+CorePHP does **not** transparently override native functions (the runkit7 approach segfaulted on
+PHP 8.4 and was removed). Instead, use these pure-PHP `s_*()` shims — always available, always
+throwing on failure instead of returning `null`/`false`/`0`:
 
-| Function | Old Failure | New Behaviour |
+| Native (silent) | Safe replacement | Throws on failure |
 |---|---|---|
-| `json_decode()` | returns `null` | throws `JsonDecodeException` |
-| `json_encode()` | returns `false` | throws `JsonEncodeException` |
-| `file_get_contents()` | returns `false` | throws `FileReadException` |
-| `file_put_contents()` | returns `false` | throws `FileWriteException` |
-| `intval()` | returns `0` silently | throws `TypeCoercionException` |
-| `floatval()` | returns `0.0` silently | throws `TypeCoercionException` |
-| `preg_match()` | returns `false` | throws `RegexException` |
-| `preg_replace()` | returns `null` | throws `RegexException` |
-| `curl_exec()` | returns `false` | throws `HttpException` |
-| `base64_decode()` | returns `false` | throws `EncodingException` |
+| `json_decode()` → `null` | `s_json()` | `Psl\Json\Exception\DecodeException` |
+| `json_encode()` → `false` | `s_enc()` | `Psl\Json\Exception\EncodeException` |
+| `file_get_contents()` → `false` | `s_file()` | `Psl\File\Exception\RuntimeException` |
+| `file_put_contents()` → `false` | `s_write()` / `s_append()` | `Psl\File\Exception\RuntimeException` |
+| `intval()` → `0` | `s_int()` | `Psl\Type\Exception\CoercionException` |
+| `floatval()` → `0.0` | `s_float()` | `Psl\Type\Exception\CoercionException` |
+| `preg_match()` → `false` | `s_match()` / `s_regex()` | `Psl\Regex\Exception\ExceptionInterface` |
+| `preg_replace()` → `null` | `s_replace()` | `Psl\Regex\Exception\ExceptionInterface` |
+| `curl_exec()` → `false` | `s_get()` / `s_post()` | `core\Net\Http\HttpException` |
+| `base64_decode()` → `false` | `s_b64()` | `core\Security\Exceptions\EncodingException` |
+
+> File/stream operations that emit a PHP **warning** on failure also throw automatically via the
+> `bootstrap.php` error handler (warnings/notices → `ErrorException`) — no shim required.
 
 ---
 
@@ -299,8 +302,6 @@ CorePHP/
 │       ├── composer.json               # std library package
 │       ├── phpunit.xml
 │       └── src/
-│           ├── Engine/
-│           │   └── FunctionOverrider.php  # runkit7 overrides
 │           ├── Internal/Array/
 │           │   └── TypedCollection.php    # Pillar 1
 │           ├── Net/Http/

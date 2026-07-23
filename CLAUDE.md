@@ -21,12 +21,26 @@ make build      # Build the Docker image (required before anything else)
 make up         # Start Docker Compose services (detached)
 make down       # Stop services
 make shell      # Open sh inside the running container
-make test       # Run PHPUnit test suite (inside container)
-make lint       # PHP-CS-Fixer dry-run + PHPStan Level 9 (inside container)
+make test       # Run PHPUnit suite (needs `make up` first — execs into running container)
+make lint       # PHP-CS-Fixer dry-run + PHPStan Level 9 (needs `make up`)
 make lint-fix   # Auto-fix PHP-CS-Fixer violations
+make check      # Full gate: test + lint in sequence (needs `make up`)
+make ci-test    # Run PHPUnit standalone — ephemeral `docker run`, no `make up` needed
+make ci-lint    # Run lint standalone — ephemeral `docker run`, no `make up` needed
+make rr-start   # Start RoadRunner server inside the container
 make logs       # Follow container logs
 make clean      # Prune stopped containers + dangling images
+make tag VERSION=x.y.z   # Tag + push a semver release (GH Actions builds/pushes to Docker Hub)
 make help       # List all targets
+```
+
+**`make test`/`make lint` vs `make ci-test`/`make ci-lint`:** the plain targets `docker compose exec` into an already-running container (`make up` first). The `ci-*` targets spin up a fresh `docker run` and mount `config/php-ci.ini`, which clears `disable_functions` so PHPStan (`unserialize`) and PHPUnit (`proc_open`) can run — use these for one-shot checks or CI.
+
+**Run a single test** (there is no Make target — exec directly):
+```bash
+make shell   # then, inside the container:
+opt/corephp-vm/std/vendor/bin/phpunit --configuration=opt/corephp-vm/std/phpunit.xml --filter '::testMethodName'
+opt/corephp-vm/std/vendor/bin/phpunit --configuration=opt/corephp-vm/std/phpunit.xml opt/corephp-vm/std/tests/VecTest.php
 ```
 
 **TDD Workflow (mandatory):**
@@ -82,12 +96,25 @@ CorePHP/
 
 ---
 
+## Two Composer Roots (important)
+
+This repo has **two separate Composer packages**, each with its own `vendor/`, autoload, and PHPStan level:
+
+| Root | Package | Namespace → path | PHPStan | Purpose |
+|---|---|---|---|---|
+| `./composer.json` | `corephp/corephp-vm` | `App\` → `src/` | `^1.11` | Runtime shell: RoadRunner worker, PSR-7 loop (`worker.php`) |
+| `opt/corephp-vm/std/composer.json` | `corephp/std` | `core\` → `opt/corephp-vm/std/src/` | `^2.0` + PSL ext | The `std` library — the actual deliverable, all `core\*` classes + `s_*` shims |
+
+`make test` runs `opt/corephp-vm/std/phpunit.xml` (the **std** suite) — that is where all test coverage lives. The PSL version lock (see below) applies to the `std` root. New `core\*` code and its tests always go under `opt/corephp-vm/std/`.
+
+---
+
 ## Architecture — Three Enforcement Layers
 
 | Layer | Mechanism | Timing | What It Covers |
 |---|---|---|---|
 | **1. Static** | PHPStan Level 9 + PHP-CS-Fixer | CI/pre-commit | Type errors, `mixed`, eval, style |
-| **2. Boot** | `runkit7` `FunctionOverrider` | Process startup (once) | Replaces 11 native functions |
+| **2. Boot** | `runkit7` `FunctionOverrider` | Process startup (once) | Replaces native functions — **DISABLED by default** (segfaults on PHP 8.4; opt-in via `COREPHP_ENABLE_RUNKIT_OVERRIDE=1`). See Known Issues. |
 | **3. Runtime** | `bootstrap.php` error handler | Every request | Warnings/Notices → Exceptions |
 
 ### The `std` Library — Namespace Tree
@@ -160,6 +187,12 @@ s_fwrite(resource $handle, string $data): int        // Safe fwrite handle
 s_match(string $pattern, string $subject): bool      // Bool match test
 s_regex(string $pattern, string $subject): ?array    // First match groups
 s_regex_all(string $pattern, string $subject): array // All match groups
+s_replace(string $pat, string $repl, string $subj): string // Safe preg_replace → Psl\Regex\replace()
+```
+
+### Encoding
+```php
+s_b64(string $encoded): string   // Safe base64_decode (strict) → throws EncodingException on invalid
 ```
 
 ### Environment
@@ -226,7 +259,7 @@ These are **redefined at boot** to throw instead of silently failing:
 - ❌ `unserialize()`, `exec()`, `shell_exec()`, `system()`, `eval()` — disabled or forbidden
 - ❌ `new core\Security\Safe\Safe` — **the `Safe` class was deleted**; use PSL directly (`Psl\Json\*`, `Psl\File\*`, `Psl\Type\*`)
 - ❌ Upgrading `azjezz/psl` past `^4.2` — **BLOCKED** (see below)
-- ❌ Direct `json_decode()` without using `s_json()` or `Psl\Json\decode()` — it will throw anyway at runtime, but be explicit
+- ❌ Direct `json_decode()` without using `s_json()` or `Psl\Json\decode()` — with the runkit override disabled by default (see Known Issues), native `json_decode()` will **silently return `null`** on bad input. Always use `s_json()` / `Psl\Json\decode()`.
 
 ---
 
@@ -242,9 +275,26 @@ These are **redefined at boot** to throw instead of silently failing:
 
 ## Known Issues
 
-1. **RoadRunner `WorkerAllocate: EOF`** — When running `docker compose up`, the worker crashes with this error. Root cause: `spiral/roadrunner-worker` package is missing from vendor inside the container. The Docker image itself builds correctly; this is a dev environment issue only. Workaround: `make shell` then `composer install` manually.
+1. **RoadRunner worker crash — RESOLVED (2026-07-23).** The worker used to die at startup
+   (`WorkerAllocate: EOF` / `no CONTROL flag`). It was **four chained bugs**, all now fixed and
+   verified end-to-end (`/health` → 200, 4 workers ready, 208 tests green):
+   - **`ext-sockets` missing** — required by `spiral/roadrunner-worker`; without it the root
+     `composer` step failed and `/app/vendor` never shipped. Added `sockets` + `linux-headers` to the Dockerfile.
+   - **Root vendor never installed** — `composer install` needs a lock (none exists) and its failure was
+     swallowed by `2>/dev/null || true`. Switched to `composer update`, removed the error-swallow.
+   - **`getmypid()` was in `disable_functions`** — RoadRunner's handshake calls it to send the worker
+     PID; disabling it threw `undefined function`, which the catch-all masked as an opaque 500. Removed
+     `getmypid`/`getmyuid`/`getmygid` (and the pointless `serialize` block) from `config/php.ini`.
+   - **Compose bind mount `./:/app` shadowed the image's `/app/vendor`.** Removed the mount from the
+     production compose; the dev override keeps a `/app/vendor` anonymous volume.
 
-2. **`eval()` cannot be blocked** via `php.ini` (language construct). PHPStan covers this statically. Never use `eval()`.
+2. **runkit7 transparent override (Layer 2) is DISABLED by default.** The unofficial PHP-8.4 runkit7
+   build segfaults the process at shutdown whenever an internal function is redefined (even a no-op
+   redefine, opcache on or off). `FunctionOverrider` also had an infinite-recursion bug (override bodies
+   self-called). SAFE behaviour now comes from the `s_*()` shims + PSL + the Layer-3 error handler +
+   PHPStan. Opt in with `COREPHP_ENABLE_RUNKIT_OVERRIDE=1` (experimental — expect shutdown instability).
+
+3. **`eval()` cannot be blocked** via `php.ini` (language construct). PHPStan covers this statically. Never use `eval()`.
 
 ---
 
