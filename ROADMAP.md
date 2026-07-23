@@ -84,7 +84,7 @@ Legend: ✅ done · 🚧 in progress · ⏳ planned
 - ✅ **Fix the RoadRunner worker crash.** Done — verified persistent request loop (`/health` → 200, stable worker pool). Root cause was four chained silent failures (missing `ext-sockets`, swallowed `composer` step, `getmypid` wrongly in `disable_functions`, compose mount shadowing vendor); runkit7 removed in the process.
 - ⏳ **Drop-in proof.** Take an unmodified real-world PHP app, run it on CorePHP, and show it surviving fatals and leaks that produce untraceable 500s on PHP-FPM.
 - ⏳ **Happy-path compatibility test suite.** Automated parity proof: identical return values to vanilla PHP across the overridden surface, on success.
-- ⏳ **Reproducible benchmark.** Cold-start vs. persistent latency, published with the harness so anyone can rerun it.
+- ✅ **Reproducible benchmark.** Done — one-command harness in [`benchmarks/`](benchmarks/) comparing persistent (CorePHP) vs cold-start (PHP-FPM, opcache on) on a byte-identical app. **~6× throughput, p50 3.8ms vs 24ms.** Anyone can rerun it with `./run.sh`.
 - ⏳ **v1.0.0 tag + public launch** (thread, visual roadmap, Show HN / r/PHP).
 
 ## Q4 2026 — *Know before you ship* → **v1.1 – v1.2**

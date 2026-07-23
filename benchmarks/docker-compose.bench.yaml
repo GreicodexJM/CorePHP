@@ -1,0 +1,37 @@
+# =============================================================================
+# CorePHP benchmark stack — persistent (CorePHP) vs cold-start (PHP-FPM).
+# Both serve the identical bench_handle() workload from ./app.
+#   CorePHP : http://localhost:8090
+#   PHP-FPM : http://localhost:8091
+# =============================================================================
+
+services:
+  # --- Contender: CorePHP persistent RoadRunner workers --------------------
+  corephp:
+    image: corephp-vm:latest
+    container_name: bench-corephp
+    ports:
+      - "8090:8080"
+    volumes:
+      - ./app:/bench:ro
+      - ./.rr.bench.yaml:/rr.yaml:ro
+    command: ["rr", "serve", "-c", "/rr.yaml"]
+
+  # --- Baseline: PHP-FPM (cold start per request) + nginx ------------------
+  fpm:
+    build:
+      context: ./fpm
+    container_name: bench-fpm
+    volumes:
+      - ./app:/var/www/html:ro
+
+  nginx:
+    image: nginx:alpine
+    container_name: bench-nginx
+    ports:
+      - "8091:80"
+    volumes:
+      - ./fpm/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./app:/var/www/html:ro
+    depends_on:
+      - fpm
