@@ -86,7 +86,7 @@ Legend: ✅ done · 🚧 in progress · ⏳ planned
 - ✅ **Happy-path compatibility test suite.** Done — `HappyPathParityTest` asserts every `s_*()` safe replacement returns byte-identical results to the native PHP function on valid input (only the failure path differs). Part of the CI gate (241 tests). It already caught and fixed a real `s_str()`/`strval()` divergence.
 - ✅ **Reproducible benchmark.** Done — one-command harness in [`benchmarks/`](benchmarks/) comparing persistent (CorePHP) vs cold-start (PHP-FPM, opcache on) on a byte-identical app. **~6× throughput, p50 3.8ms vs 24ms.** Anyone can rerun it with `./run.sh`.
 - ✅ **v1.0.0 released.** Tagged and published to Docker Hub — **multi-arch (amd64 + arm64)**: `docker pull greicodex/corephp-vm:1.0.0`.
-- ⏳ **Public launch** (thread, visual roadmap, Show HN / r/PHP) — the assets are ready (the ~6× benchmark + the $0-order drop-in demo).
+- ✅ **Public launch** — announced on X. Q3 complete: the runtime works, every proof is built and reproducible, and v1.0.0 is GA on Docker Hub.
 
 ## Q4 2026 — *Know before you ship* → **v1.1 – v1.2**
 
