@@ -1,0 +1,35 @@
+{
+    "name": "corephp/audit",
+    "description": "CorePHP compile-time audit — SAFE / SECURE / STABLE readiness for PHP code",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "nikic/php-parser": "^5.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "core\\Audit\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "core\\Audit\\Tests\\": "tests/"
+        },
+        "exclude-from-classmap": [
+            "tests/fixtures/"
+        ]
+    },
+    "bin": [
+        "bin/corephp-audit"
+    ],
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

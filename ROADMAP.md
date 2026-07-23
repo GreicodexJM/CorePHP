@@ -92,7 +92,7 @@ Legend: ✅ done · 🚧 in progress · ⏳ planned
 
 **Goal:** ship the compile-time audit and widen SAFE coverage. This is the quarter that turns CorePHP from "a safer runtime" into "a runtime that tells you *why* your app isn't safe yet."
 
-- ⏳ **`corephp audit` — the compile-time advisor (MVP).** A CLI + PHPStan-backed analyzer that scans your codebase and emits a **SAFE / SECURE / STABLE readiness report**: every unchecked `json_decode`/`file_get_contents`, every `unserialize`/`eval`, and every request-scoped global or static that leaks in a long-running worker — each with file, line, severity, and the fix. Runs locally and in CI (non-zero exit on regressions).
+- ✅ **`corephp audit` — the compile-time advisor (MVP).** Done — a php-parser CLI in [`tools/audit/`](tools/audit/) that scans a codebase and emits a **SAFE / SECURE / STABLE readiness report** (`json_decode`/`file_get_contents` → `s_*`, `unserialize`/`eval`/`exec`, and worker footguns like `exit`/`global`/static state), each with file, line, severity, and fix. Human report + `--json` + CI exit code + `--min-severity` gate. 13 tests. It already flags the exact silent-failure lines the drop-in demo hits — at compile time. *(Data-flow "is it actually checked?" precision is the planned PHPStan-ruleset evolution.)*
 - ⏳ **Expand safe-override coverage** across PHP's silent-failure surface (array, string, date/time, and more) — tracked as a public "footgun catalog" the audit maps to.
 - ⏳ **Fatal → traceable exception + structured logs.** Every fatal carries a stack trace and request context; nothing dies silently.
 - ⏳ **Strictness / compat modes** (`COREPHP_STRICT`, per-function opt-out) shipped and documented for gradual adoption.

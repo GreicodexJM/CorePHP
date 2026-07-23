@@ -96,16 +96,17 @@ CorePHP/
 
 ---
 
-## Two Composer Roots (important)
+## Three Composer Roots (important)
 
-This repo has **two separate Composer packages**, each with its own `vendor/`, autoload, and PHPStan level:
+This repo has **three separate Composer packages**, each with its own `vendor/`, autoload, and tests:
 
-| Root | Package | Namespace → path | PHPStan | Purpose |
-|---|---|---|---|---|
-| `./composer.json` | `corephp/corephp-vm` | `App\` → `src/` | `^1.11` | Runtime shell: RoadRunner worker, PSR-7 loop (`worker.php`) |
-| `opt/corephp-vm/std/composer.json` | `corephp/std` | `core\` → `opt/corephp-vm/std/src/` | `^2.0` + PSL ext | The `std` library — the actual deliverable, all `core\*` classes + `s_*` shims |
+| Root | Package | Namespace → path | Purpose |
+|---|---|---|---|
+| `./composer.json` | `corephp/corephp-vm` | `App\` → `src/` | Runtime shell: RoadRunner worker, PSR-7 loop (`worker.php`) |
+| `opt/corephp-vm/std/composer.json` | `corephp/std` | `core\` → `opt/corephp-vm/std/src/` | The `std` library — the actual deliverable, all `core\*` classes + `s_*` shims (PHPStan L9 + PSL ext) |
+| `tools/audit/composer.json` | `corephp/audit` | `core\Audit\` → `tools/audit/src/` | The compile-time `corephp audit` CLI (php-parser; SAFE/SECURE/STABLE). Own tests; `make audit`. |
 
-`make test` runs `opt/corephp-vm/std/phpunit.xml` (the **std** suite) — that is where all test coverage lives. The PSL version lock (see below) applies to the `std` root. New `core\*` code and its tests always go under `opt/corephp-vm/std/`.
+`make test` runs `opt/corephp-vm/std/phpunit.xml` (the **std** suite) — that is where the runtime library's coverage lives. The PSL version lock (see below) applies to the `std` root. New `core\*` code and its tests go under `opt/corephp-vm/std/`; new audit rules under `tools/audit/`.
 
 ---
 

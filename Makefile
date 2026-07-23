@@ -8,7 +8,7 @@ IMAGE_TAG   := latest
 CONTAINER   := corephp-vm-app
 COMPOSE     := docker compose
 
-.PHONY: help build up down restart shell check test lint lint-fix ci-test ci-lint rr-start logs clean
+.PHONY: help build up down restart shell check test lint lint-fix audit ci-test ci-lint rr-start logs clean
 
 # Default target
 help: ## Show available targets
@@ -71,6 +71,14 @@ lint-fix: ## Auto-fix PHP-CS-Fixer violations (requires running compose containe
 
 test: ## Run PHPUnit test suite (requires running compose container)
 	$(COMPOSE) exec app sh /app/ci/test.sh
+
+AUDIT_PATH ?= demo/app
+audit: ## Run corephp-audit (SAFE/SECURE/STABLE); override target with AUDIT_PATH=<dir>
+	docker run --rm \
+	  -v $(PWD):/app \
+	  -v $(CI_INI):/usr/local/etc/php/php.ini:ro \
+	  --entrypoint sh $(IMAGE_NAME):$(IMAGE_TAG) \
+	  -c 'cd /app/tools/audit && { [ -d vendor ] || composer update --no-interaction -q; } && php bin/corephp-audit /app/$(AUDIT_PATH)'
 
 ci-test: ## Run PHPUnit standalone (no compose needed; mounts CI php.ini)
 	@echo "→ Running PHPUnit (standalone)..."

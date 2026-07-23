@@ -1,0 +1,108 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use core\Audit\Auditor;
+use core\Audit\Report;
+use core\Audit\Severity;
+
+// Locate the Composer autoloader whether run standalone or as a dependency.
+(static function (): void {
+    $candidates = [
+        __DIR__ . '/../vendor/autoload.php',        // standalone install
+        __DIR__ . '/../../../autoload.php',         // installed inside a project's vendor/
+        __DIR__ . '/../../../../vendor/autoload.php',
+    ];
+    foreach ($candidates as $file) {
+        if (is_file($file)) {
+            require $file;
+            return;
+        }
+    }
+    fwrite(STDERR, "corephp-audit: could not find vendor/autoload.php — run `composer install`.\n");
+    exit(2);
+})();
+
+/** @param list<string> $argv */
+$run = static function (array $argv): int {
+    $args        = array_slice($argv, 1);
+    $json        = false;
+    $noColor     = getenv('NO_COLOR') !== false;
+    $minSeverity = Severity::LOW;
+    $paths       = [];
+
+    foreach ($args as $arg) {
+        if ($arg === '--json') {
+            $json = true;
+        } elseif ($arg === '--no-color') {
+            $noColor = true;
+        } elseif ($arg === '-h' || $arg === '--help') {
+            fwrite(STDOUT, usage());
+            return 0;
+        } elseif (str_starts_with($arg, '--min-severity=')) {
+            $value = substr($arg, strlen('--min-severity='));
+            try {
+                $minSeverity = Severity::fromString($value);
+            } catch (\ValueError) {
+                fwrite(STDERR, "corephp-audit: invalid --min-severity '{$value}' (use low|medium|high).\n");
+                return 2;
+            }
+        } elseif (str_starts_with($arg, '-')) {
+            fwrite(STDERR, "corephp-audit: unknown option '{$arg}'.\n" . usage());
+            return 2;
+        } else {
+            $paths[] = $arg;
+        }
+    }
+
+    if ($paths === []) {
+        $paths = ['.'];
+    }
+
+    $findings = [];
+    $auditor  = new Auditor();
+    foreach ($paths as $path) {
+        if (!file_exists($path)) {
+            fwrite(STDERR, "corephp-audit: path not found: {$path}\n");
+            return 2;
+        }
+        foreach ($auditor->audit($path) as $finding) {
+            $findings[] = $finding;
+        }
+    }
+
+    $report = new Report($findings);
+
+    if ($json) {
+        fwrite(STDOUT, $report->json($minSeverity) . "\n");
+    } else {
+        fwrite(STDOUT, $report->terminal($minSeverity, color: !$noColor));
+    }
+
+    return $report->exitCode($minSeverity);
+};
+
+function usage(): string
+{
+    return <<<TXT
+    corephp-audit — SAFE / SECURE / STABLE readiness audit for PHP code
+
+    Usage:
+      corephp-audit [options] [path ...]        (default path: .)
+
+    Options:
+      --json                    Output findings as JSON.
+      --min-severity=LEVEL      Only report/gate on low|medium|high (default: low).
+      --no-color                Disable ANSI colours.
+      -h, --help                Show this help.
+
+    Exit codes:
+      0  no findings at or above --min-severity
+      1  findings found
+      2  usage / IO error
+
+    TXT;
+}
+
+exit($run($argv));
