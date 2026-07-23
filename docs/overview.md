@@ -1,7 +1,8 @@
 ---
 layout: home
-title: Home
+title: Overview
 nav_order: 1
+permalink: /overview/
 ---
 
 <p align="center">

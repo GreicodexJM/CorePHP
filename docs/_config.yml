@@ -25,6 +25,8 @@ nav_sort: order   # use nav_order front matter to sort pages
 
 # External links in the nav
 nav_external_links:
+  - title: "← Roadmap / Home"
+    url: https://greicodexjm.github.io/CorePHP/
   - title: "Docker Hub — greicodex/corephp-vm"
     url: https://hub.docker.com/r/greicodex/corephp-vm
   - title: "GitHub Repository"
@@ -75,3 +77,4 @@ exclude:
   - node_modules
   - vendor
   - PROJECT.md
+  - launch/twitter-thread.md   # internal launch copy — keep in repo, off the public site
