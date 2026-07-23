@@ -154,6 +154,11 @@ if (!function_exists('s_str')) {
      */
     function s_str(mixed $value): string
     {
+        // PSL string() rejects floats; accept them explicitly so s_str is a true
+        // drop-in for strval() on numeric types (identical output, same precision).
+        if (is_float($value)) {
+            return (string) $value;
+        }
         return Type\string()->coerce($value);
     }
 }

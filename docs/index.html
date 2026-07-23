@@ -448,7 +448,7 @@ $qty    = <span class="fn">intval</span>($input);              <span class="c">/
         <div class="items">
           <div class="item"><span class="chip done">Done</span><span class="txt">RoadRunner worker crash fixed — persistent request loop verified (<code>/health</code> → 200).</span></div>
           <div class="item"><span class="chip done">Done</span><span class="txt">Drop-in proof — same <b>unmodified</b> app: stock PHP silently ships a $0 order (200), CorePHP catches it at the exact line, traced (500), and keeps serving.</span></div>
-          <div class="item"><span class="chip plan">Planned</span><span class="txt">Happy-path compatibility test suite — parity with vanilla PHP on success.</span></div>
+          <div class="item"><span class="chip done">Done</span><span class="txt">Happy-path compatibility suite — every <code>s_*()</code> proven byte-identical to native PHP on valid input, enforced in CI.</span></div>
           <div class="item"><span class="chip done">Done</span><span class="txt">Reproducible cold-start vs persistent benchmark — <b>~6× throughput</b> (p50 3.8ms vs 24ms), one-command harness.</span></div>
           <div class="item"><span class="chip plan">Planned</span><span class="txt">v1.0.0 tag &amp; public launch (thread, Show HN / r/PHP).</span></div>
         </div>
