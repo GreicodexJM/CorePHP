@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 use core\Audit\Auditor;
+use core\Audit\Baseline;
 use core\Audit\Report;
 use core\Audit\Severity;
 
@@ -29,8 +30,11 @@ $run = static function (array $argv): int {
     $args        = array_slice($argv, 1);
     $json        = false;
     $noColor     = getenv('NO_COLOR') !== false;
-    $minSeverity = Severity::LOW;
-    $paths       = [];
+    $minSeverity   = Severity::LOW;
+    $paths         = [];
+    $generatePath  = null;
+    $applyPath     = null;
+    $defaultBaseline = 'corephp-audit-baseline.json';
 
     foreach ($args as $arg) {
         if ($arg === '--json') {
@@ -40,6 +44,14 @@ $run = static function (array $argv): int {
         } elseif ($arg === '-h' || $arg === '--help') {
             fwrite(STDOUT, usage());
             return 0;
+        } elseif ($arg === '--generate-baseline') {
+            $generatePath = $defaultBaseline;
+        } elseif (str_starts_with($arg, '--generate-baseline=')) {
+            $generatePath = substr($arg, strlen('--generate-baseline='));
+        } elseif ($arg === '--baseline') {
+            $applyPath = $defaultBaseline;
+        } elseif (str_starts_with($arg, '--baseline=')) {
+            $applyPath = substr($arg, strlen('--baseline='));
         } elseif (str_starts_with($arg, '--min-severity=')) {
             $value = substr($arg, strlen('--min-severity='));
             try {
@@ -72,6 +84,26 @@ $run = static function (array $argv): int {
         }
     }
 
+    // Generate mode: capture ALL current findings and exit without reporting.
+    if ($generatePath !== null) {
+        if (@file_put_contents($generatePath, Baseline::generate($findings) . "\n") === false) {
+            fwrite(STDERR, "corephp-audit: could not write baseline: {$generatePath}\n");
+            return 2;
+        }
+        fwrite(STDOUT, sprintf("corephp-audit: wrote %d baselined finding(s) to %s\n", count($findings), $generatePath));
+        return 0;
+    }
+
+    // Apply mode: suppress baselined findings; only new ones remain.
+    if ($applyPath !== null) {
+        try {
+            $findings = Baseline::fromFile($applyPath)->filter($findings);
+        } catch (\RuntimeException $e) {
+            fwrite(STDERR, 'corephp-audit: ' . $e->getMessage() . "\n");
+            return 2;
+        }
+    }
+
     $report = new Report($findings);
 
     if ($json) {
@@ -94,6 +126,10 @@ function usage(): string
     Options:
       --json                    Output findings as JSON.
       --min-severity=LEVEL      Only report/gate on low|medium|high (default: low).
+      --generate-baseline[=F]   Write current findings to a baseline file
+                                (default: corephp-audit-baseline.json) and exit 0.
+      --baseline[=F]            Suppress findings recorded in the baseline; report
+                                only NEW ones.
       --no-color                Disable ANSI colours.
       -h, --help                Show this help.
 

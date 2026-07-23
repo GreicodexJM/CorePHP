@@ -58,6 +58,26 @@ final class AuditorTest extends TestCase
         );
     }
 
+    public function testDetectsGlobalRuntimeMutation(): void
+    {
+        $findings = (new Auditor())->auditFile(self::FIXTURES . '/runtime_issues.php');
+        // 3 mutator calls + 1 $GLOBALS write; error_reporting() (getter) is NOT flagged.
+        self::assertSame(
+            ['global-runtime-mutation', 'global-runtime-mutation', 'global-runtime-mutation', 'globals-write'],
+            $this->rules($findings, Pillar::STABLE),
+        );
+    }
+
+    public function testDetectsAdditionalSafeFunctions(): void
+    {
+        $findings = (new Auditor())->auditFile(self::FIXTURES . '/runtime_issues.php');
+        // stream_get_contents, getenv, strtotime.
+        self::assertSame(
+            ['silent-failure', 'silent-failure', 'silent-failure'],
+            $this->rules($findings, Pillar::SAFE),
+        );
+    }
+
     public function testCleanFileProducesNoFindings(): void
     {
         $findings = (new Auditor())->auditFile(self::FIXTURES . '/clean.php');
@@ -75,8 +95,8 @@ final class AuditorTest extends TestCase
     public function testDirectoryScanCoversAllFixtures(): void
     {
         $findings = (new Auditor())->audit(self::FIXTURES);
-        // 3 SAFE + 4 SECURE + 4 STABLE across the fixtures, 0 from clean.php.
-        self::assertCount(11, $findings);
+        // safe(3) + secure(4) + stable(4) + runtime(4 STABLE + 3 SAFE), clean(0).
+        self::assertCount(18, $findings);
     }
 
     public function testInlineIgnoreSuppressesFindings(): void

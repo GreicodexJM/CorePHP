@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace core\Audit;
 
 use core\Audit\Rule\DangerousFunctionRule;
+use core\Audit\Rule\GlobalRuntimeMutationRule;
 use core\Audit\Rule\LeakRiskRule;
 use core\Audit\Rule\Rule;
 use core\Audit\Rule\SilentFailureRule;
@@ -37,6 +38,7 @@ final class Auditor
         $this->rules  = $rules ?? [
             new DangerousFunctionRule(),
             new LeakRiskRule(),
+            new GlobalRuntimeMutationRule(),
             new SilentFailureRule(),
         ];
     }
