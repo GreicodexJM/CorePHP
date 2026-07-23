@@ -83,6 +83,10 @@ set_exception_handler(
             ['trace' => $e->getTraceAsString()]
         );
         if (PHP_SAPI === 'cli') {
+            // Last-resort handler for a Throwable that escaped the worker loop (e.g. a
+            // boot/startup failure). Exiting is correct — the worker cannot safely
+            // continue; RoadRunner's supervisor respawns it.
+            // corephp-audit-ignore
             exit(1);
         }
     }

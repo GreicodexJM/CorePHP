@@ -50,6 +50,20 @@ SAFE (2)
 3 finding(s). Exit 1.
 ```
 
+## Ignoring a finding
+
+When a finding is a deliberate, reviewed exception, mark it inline with a
+`corephp-audit-ignore` comment — on the same line, or the line directly above:
+
+```php
+$blob = unserialize($trusted);   // corephp-audit-ignore: trusted internal cache
+
+// corephp-audit-ignore: last-resort exit — the worker cannot continue
+exit(1);
+```
+
+Keep the reason in the comment so the next reader knows why it's allowed.
+
 ## Options
 
 | Option | Effect |

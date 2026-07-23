@@ -1,0 +1,36 @@
+name: corephp audit
+
+# =============================================================================
+# Dogfoods the project's own compile-time audit (tools/audit) on the production
+# code paths. Advisory report for all severities; the job FAILS on HIGH findings.
+# The audit is pure PHP + nikic/php-parser, so no Docker build is needed here.
+# =============================================================================
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: SAFE / SECURE / STABLE gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install audit dependencies
+        run: composer update --no-interaction --no-progress
+        working-directory: tools/audit
+
+      - name: Run corephp audit
+        run: sh ci/audit.sh

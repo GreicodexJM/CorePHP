@@ -8,7 +8,7 @@ IMAGE_TAG   := latest
 CONTAINER   := corephp-vm-app
 COMPOSE     := docker compose
 
-.PHONY: help build up down restart shell check test lint lint-fix audit ci-test ci-lint rr-start logs clean
+.PHONY: help build up down restart shell check test lint lint-fix audit ci-test ci-lint ci-audit ci-check rr-start logs clean
 
 # Default target
 help: ## Show available targets
@@ -98,8 +98,16 @@ ci-lint: ## Run PHPStan + CS-Fixer standalone (no compose needed; mounts CI php.
 	  sh /app/ci/lint.sh
 	@echo "✓ Lint passed"
 
-ci-check: ci-test ci-lint ## Run full quality gate standalone (no compose needed)
-	@echo "✓ ci-check passed — all tests and lint clean"
+ci-audit: ## Run the corephp audit gate standalone (no compose; mounts CI php.ini)
+	@echo "→ Running corephp audit gate (standalone)..."
+	docker run --rm \
+	  -v $(PWD):/app \
+	  -v $(CI_INI):/usr/local/etc/php/php.ini:ro \
+	  $(IMAGE_NAME):$(IMAGE_TAG) \
+	  sh /app/ci/audit.sh
+
+ci-check: ci-test ci-lint ci-audit ## Run full quality gate standalone (no compose needed)
+	@echo "✓ ci-check passed — all tests, lint, and audit clean"
 
 # ---------------------------------------------------------------------------
 # RoadRunner

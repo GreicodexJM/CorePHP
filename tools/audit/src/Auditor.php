@@ -102,7 +102,33 @@ final class Auditor
         $traverser->addVisitor($visitor);
         $traverser->traverse($ast);
 
-        return $visitor->findings;
+        $suppressed = $this->suppressedLines($code);
+
+        return array_values(array_filter(
+            $visitor->findings,
+            static fn (Finding $f): bool => !isset($suppressed[$f->line]),
+        ));
+    }
+
+    /**
+     * Lines suppressed by an inline `corephp-audit-ignore` marker. The marker
+     * suppresses findings on its own line (trailing comment) and the next line
+     * (comment placed on the line above the code).
+     *
+     * @return array<int, true>
+     */
+    private function suppressedLines(string $code): array
+    {
+        $lines      = explode("\n", str_replace(["\r\n", "\r"], "\n", $code));
+        $suppressed = [];
+        foreach ($lines as $index => $line) {
+            if (str_contains($line, 'corephp-audit-ignore')) {
+                $lineNo                  = $index + 1;
+                $suppressed[$lineNo]     = true;
+                $suppressed[$lineNo + 1] = true;
+            }
+        }
+        return $suppressed;
     }
 
     /**

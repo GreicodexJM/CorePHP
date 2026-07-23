@@ -79,6 +79,27 @@ final class AuditorTest extends TestCase
         self::assertCount(11, $findings);
     }
 
+    public function testInlineIgnoreSuppressesFindings(): void
+    {
+        $tmp = sys_get_temp_dir() . '/corephp_audit_ignore_' . uniqid('', true) . '.php';
+        file_put_contents($tmp, <<<'PHP'
+            <?php
+            unserialize($a);                       // corephp-audit-ignore: trusted internal blob
+            // corephp-audit-ignore: intentional last-resort
+            exit(1);
+            eval($b);
+            PHP);
+
+        try {
+            $findings = (new Auditor())->auditFile($tmp);
+            // unserialize (trailing) and exit (line-above) suppressed; eval remains.
+            self::assertCount(1, $findings);
+            self::assertSame('eval', $findings[0]->rule);
+        } finally {
+            @unlink($tmp);
+        }
+    }
+
     public function testDirectoryScanSkipsVendor(): void
     {
         $tmp = sys_get_temp_dir() . '/corephp_audit_' . uniqid('', true);
