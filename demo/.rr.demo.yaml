@@ -1,0 +1,16 @@
+# RoadRunner config for the drop-in demo worker (mounted at /rr.yaml).
+version: "3"
+
+server:
+  command: "php /demo/worker.php"
+  relay: pipes
+
+http:
+  address: "0.0.0.0:8080"
+  pool:
+    num_workers: 2
+    max_jobs: 0
+
+logs:
+  mode: production
+  level: error
