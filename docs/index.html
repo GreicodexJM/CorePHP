@@ -408,8 +408,9 @@ $qty    = <span class="fn">intval</span>($input);              <span class="c">/
         <div class="ico">🛡️</div>
         <h3>SAFE</h3>
         <div class="promise">No silent failures. No untraceable fatals.</div>
-        <p>PHP's silent-failure functions are replaced with drop-in safe versions that throw
-        standard exceptions. Fatals become catchable, logged, and traced.</p>
+        <p>Pure-PHP safe replacements (<code>s_json</code>, <code>s_file</code>, …) throw standard
+        exceptions instead of returning <code>null</code>/<code>false</code>, and the boot error
+        handler turns warnings into exceptions. Fatals become catchable, logged, and traced.</p>
       </div>
       <div class="pillar secure">
         <div class="ico">🔒</div>
@@ -448,7 +449,8 @@ $qty    = <span class="fn">intval</span>($input);              <span class="c">/
           <div class="item"><span class="chip done">Done</span><span class="txt">RoadRunner worker crash fixed — persistent request loop verified (<code>/health</code> → 200).</span></div>
           <div class="item"><span class="chip plan">Planned</span><span class="txt">Drop-in proof: an <b>unmodified</b> app surviving fatals &amp; leaks that 500 on PHP-FPM.</span></div>
           <div class="item"><span class="chip plan">Planned</span><span class="txt">Happy-path compatibility test suite — parity with vanilla PHP on success.</span></div>
-          <div class="item"><span class="chip plan">Planned</span><span class="txt">Reproducible cold-start vs persistent benchmark · v1.0.0 tag &amp; public launch.</span></div>
+          <div class="item"><span class="chip done">Done</span><span class="txt">Reproducible cold-start vs persistent benchmark — <b>~6× throughput</b> (p50 3.8ms vs 24ms), one-command harness.</span></div>
+          <div class="item"><span class="chip plan">Planned</span><span class="txt">v1.0.0 tag &amp; public launch (thread, Show HN / r/PHP).</span></div>
         </div>
       </div>
 

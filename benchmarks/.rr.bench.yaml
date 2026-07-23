@@ -1,0 +1,18 @@
+# RoadRunner config for the benchmark worker (mounted at /bench/.rr.yaml).
+version: "3"
+
+server:
+  command: "php /bench/worker.php"
+  relay: pipes
+
+http:
+  address: "0.0.0.0:8080"
+  pool:
+    num_workers: 4
+    # No max_jobs recycling during the benchmark — we measure steady-state
+    # persistent throughput, not worker-recycle behaviour.
+    max_jobs: 0
+
+logs:
+  mode: production
+  level: error
